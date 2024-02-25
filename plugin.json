@@ -1,0 +1,16 @@
+{
+  "slug": "LogicalAudio",
+  "name": "LogicalAudio",
+  "version": "2.0.0",
+  "license": "proprietary",
+  "brand": "LogicalAudio",
+  "author": "AgostoSound",
+  "authorEmail": "agostosound@gmail.com",
+  "authorUrl": "https://github.com/AgostoSound",
+  "pluginUrl": "https://github.com/AgostoSound",
+  "manualUrl": "https://github.com/AgostoSound",
+  "sourceUrl": "https://github.com/AgostoSound",
+  "donateUrl": "",
+  "changelogUrl": "",
+  "modules": []
+}
