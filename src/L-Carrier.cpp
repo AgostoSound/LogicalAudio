@@ -44,7 +44,17 @@ struct L_Carrier : Module {
 
 	// Main logic.
 	void process(const ProcessArgs& args) override {
-		// Write logic here.
+
+		// Reading inputs.
+		float audio_in = inputs[AUDIO_IN_INPUT].getVoltage();
+		float a_in = inputs[A_IN_INPUT].getVoltage();
+
+		// Set outputs.
+		if (a_in >= 10.0) {
+			outputs[AND_OUT_OUTPUT].setVoltage(audio_in);
+		} else {
+			// not
+		}
 	}
 };
 
