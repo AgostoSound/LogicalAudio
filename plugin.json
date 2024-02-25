@@ -12,5 +12,15 @@
   "sourceUrl": "https://github.com/AgostoSound",
   "donateUrl": "",
   "changelogUrl": "",
-  "modules": []
+  "modules": [
+    {
+      "slug": "L-Carrier",
+      "name": "L-Carrier",
+      "description": "Logic gates that allow an audio signal to pass through.",
+      "tags": [
+        "audio",
+        "logic"
+      ]
+    }
+  ]
 }
