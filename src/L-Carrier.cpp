@@ -48,13 +48,45 @@ struct L_Carrier : Module {
 		// Reading inputs.
 		float audio_in = inputs[AUDIO_IN_INPUT].getVoltage();
 		float a_in = inputs[A_IN_INPUT].getVoltage();
+		float b_in = inputs[B_IN_INPUT].getVoltage();
+		
+		// Set leds
+		if (a_in == 10.0) {
+			lights[A_LED_LIGHT].setBrightness(1);
+		} else {
+			lights[A_LED_LIGHT].setBrightness(0);
+		}
+		if (b_in == 10.0) {
+			lights[B_LED_LIGHT].setBrightness(1);
+		} else {
+			lights[B_LED_LIGHT].setBrightness(0);
+		}
 
 		// Set outputs.
-		if (a_in >= 10.0) {
-			outputs[AND_OUT_OUTPUT].setVoltage(audio_in);
+		if (a_in == 10.0 && b_in == 10.0) {
+			outputs[AND_OUT_OUTPUT].setVoltage(audio_in);  // AND
+			outputs[NAND_OUT_OUTPUT].setVoltage(0);
 		} else {
-			// not
+			outputs[NAND_OUT_OUTPUT].setVoltage(audio_in);  // NAND
+			outputs[AND_OUT_OUTPUT].setVoltage(0);
 		}
+
+		if (a_in == 10.0 || b_in == 10.0) {
+			outputs[OR_OUT_OUTPUT].setVoltage(audio_in);  // OR
+			outputs[NOT_OUT_OUTPUT].setVoltage(0);
+		} else {
+			outputs[NOT_OUT_OUTPUT].setVoltage(audio_in);  // NOR
+			outputs[OR_OUT_OUTPUT].setVoltage(0);
+		}
+
+		if (a_in == 10.0 ^ b_in == 10.0) {
+			outputs[XOR_OUT_OUTPUT].setVoltage(audio_in);  // XOR
+			outputs[XNOR_OUT_OUTPUT].setVoltage(0);
+		} else {
+			outputs[XNOR_OUT_OUTPUT].setVoltage(audio_in);  // XNOR
+			outputs[XOR_OUT_OUTPUT].setVoltage(0);
+		}
+
 	}
 };
 
@@ -80,8 +112,8 @@ struct L_CarrierWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(30.533, 105.0)), module, L_Carrier::NOT_OUT_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(50.126, 105.0)), module, L_Carrier::XNOR_OUT_OUTPUT));
 
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(24.41, 43.2)), module, L_Carrier::A_LED_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(43.16, 43.2)), module, L_Carrier::B_LED_LIGHT));
+		addChild(createLightCentered<MediumLight<BlueLight>>(mm2px(Vec(24.41, 43.2)), module, L_Carrier::A_LED_LIGHT));
+		addChild(createLightCentered<MediumLight<BlueLight>>(mm2px(Vec(43.16, 43.2)), module, L_Carrier::B_LED_LIGHT));
 	}
 };
 
