@@ -23,9 +23,6 @@ struct L_Carrier : Module {
 		OUTPUTS_LEN
 	};
 	enum LightId {
-		CIRCUIT_A_LED_LIGHT,
-		CIRCUIT_XOR_LED_LIGHT,
-		CIRCUIT_B_LED_LIGHT,
 		A_LED_LIGHT,
 		B_LED_LIGHT,
 		LIGHTS_LEN
@@ -56,17 +53,13 @@ struct L_Carrier : Module {
 		// Set leds
 		if (a_in == 10.0) {
 			lights[A_LED_LIGHT].setBrightness(1);
-			lights[CIRCUIT_A_LED_LIGHT].setBrightness(1);
 		} else {
 			lights[A_LED_LIGHT].setBrightness(0);
-			lights[CIRCUIT_A_LED_LIGHT].setBrightness(0);
 		}
 		if (b_in == 10.0) {
 			lights[B_LED_LIGHT].setBrightness(1);
-			lights[CIRCUIT_B_LED_LIGHT].setBrightness(1);
 		} else {
 			lights[B_LED_LIGHT].setBrightness(0);
-			lights[CIRCUIT_B_LED_LIGHT].setBrightness(0);
 		}
 
 		// Set outputs.
@@ -89,17 +82,15 @@ struct L_Carrier : Module {
 		if (a_in == 10.0 ^ b_in == 10.0) {
 			outputs[XOR_OUT_OUTPUT].setVoltage(audio_in);  // XOR
 			outputs[XNOR_OUT_OUTPUT].setVoltage(0);
-			lights[CIRCUIT_XOR_LED_LIGHT].setBrightness(1);
 		} else {
 			outputs[XNOR_OUT_OUTPUT].setVoltage(audio_in);  // XNOR
 			outputs[XOR_OUT_OUTPUT].setVoltage(0);
-			lights[CIRCUIT_XOR_LED_LIGHT].setBrightness(0);
 		}
 
 	}
 };
 
-
+// Distribution and structural widget.
 struct L_CarrierWidget : ModuleWidget {
 	L_CarrierWidget(L_Carrier* module) {
 		setModule(module);
@@ -121,11 +112,8 @@ struct L_CarrierWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(30.533, 105.0)), module, L_Carrier::NOT_OUT_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(50.126, 105.0)), module, L_Carrier::XNOR_OUT_OUTPUT));
 
-		addChild(createLightCentered<MediumLight<BlueLight>>(mm2px(Vec(8.43, 15.41)), module, L_Carrier::CIRCUIT_A_LED_LIGHT));
-		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(53.0, 22.59)), module, L_Carrier::CIRCUIT_XOR_LED_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(8.43, 30.29)), module, L_Carrier::CIRCUIT_B_LED_LIGHT));
 		addChild(createLightCentered<MediumLight<BlueLight>>(mm2px(Vec(24.41, 45.7)), module, L_Carrier::A_LED_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(43.16, 45.7)), module, L_Carrier::B_LED_LIGHT));
+		addChild(createLightCentered<MediumLight<BlueLight>>(mm2px(Vec(43.16, 45.7)), module, L_Carrier::B_LED_LIGHT));
 	}
 };
 
