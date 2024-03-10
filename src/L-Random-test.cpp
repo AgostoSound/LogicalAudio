@@ -2,11 +2,14 @@
 #include "random.hpp"
 #include <random>
 #include <chrono>
+#include <array>
+#include <vector>
 
 struct L_Random_test : Module {
     enum ParamId {
         SPREAD_PARAM,
         FREQ_PARAM,
+        RANGE_BUTTON_PARAM,
         PARAMS_LEN
     };
     enum InputId {
@@ -30,6 +33,7 @@ struct L_Random_test : Module {
         uint64_t seed1 = std::random_device{}();
         rng.seed(seed0, seed1);
         config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
+        configParam(RANGE_BUTTON_PARAM, 0.f, 1.f, 0.f, "SWITCH"); // TEST Switch
         configParam(SPREAD_PARAM, 1.f, 9.f, 1.f, "SPREAD");
         configParam(FREQ_PARAM, 1.f, 9.f, 1.f, "FREQ");
         configOutput(OR_OUT_OUTPUT, "RANDOM");
@@ -82,6 +86,9 @@ struct L_Random_testWidget : ModuleWidget {
         addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
         addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
         addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+
+        // TEST SWITCH
+        addParam(createParam<CKSS>(mm2px(Vec(22, 50)), module, L_Random_test::RANGE_BUTTON_PARAM));
 
         addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(30.614, 25.036)), module, L_Random_test::SPREAD_PARAM));
         addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(10.614, 25.036)), module, L_Random_test::FREQ_PARAM));
