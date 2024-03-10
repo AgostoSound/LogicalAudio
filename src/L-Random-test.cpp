@@ -6,6 +6,7 @@
 struct L_Random_test : Module {
     enum ParamId {
         SPREAD_PARAM,
+        FREQ_PARAM,
         PARAMS_LEN
     };
     enum InputId {
@@ -29,8 +30,9 @@ struct L_Random_test : Module {
         uint64_t seed1 = std::random_device{}();
         rng.seed(seed0, seed1);
         config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-        configParam(SPREAD_PARAM, 1.f, 9.f, 1.f, "");
-        configOutput(OR_OUT_OUTPUT, "");
+        configParam(SPREAD_PARAM, 1.f, 9.f, 1.f, "SPREAD");
+        configParam(FREQ_PARAM, 1.f, 9.f, 1.f, "FREQ");
+        configOutput(OR_OUT_OUTPUT, "RANDOM");
     }
 
     // Función para verificar si ha pasado un segundo desde la última actualización
@@ -43,35 +45,29 @@ struct L_Random_test : Module {
     // Main logic.
     void process(const ProcessArgs& args) override {
         
-        // Controla voltage maximo y minimo.
-        float spread = params[SPREAD_PARAM].getValue();  // Compute the frequency from the pitch parameter.
+        // Spread max and min controller.
+        float spread = params[SPREAD_PARAM].getValue();
 
-        // Controla frecuencia de actualizacion, mejorar.
-        // float spread = params[SPREAD_PARAM].getValue();  // Compute the frequency from the pitch parameter.
-        //ms = spread * 100;
-        ms = 300;  // TEST.
-        if (shouldUpdate(ms)) {
-            // Triangle distribution.
-            //float r = 2.0f * (std::sqrt(uniform(rng)) - std::sqrt(1.0f - uniform(rng)));
+        // Update frequency controller.
+        float freq = params[FREQ_PARAM].getValue();  
+        ms = freq * 100;
+        //ms = 300;  // TEST.
+        
+        // If an update is necessary.
+        if (shouldUpdate(ms)) {  
+            std::uniform_real_distribution<float> uniform_top((spread-1.0f), (spread+1.0f));  // Top range.
+            std::uniform_real_distribution<float> uniform_bottom(-(spread+1.0f), -(spread-1.0f));  // Bottom Range.
+            std::uniform_real_distribution<float> choice(0.0f, 2.0f);  // Range choicing.
+            float selected = choice(rng);  // Random from 0 to 2.
 
-            std::uniform_real_distribution<float> uniform_top((spread-1.0f), (spread+1.0f));
-            std::uniform_real_distribution<float> uniform_bottom(-(spread+1.0f), -(spread-1.0f));   
-            std::uniform_real_distribution<float> choice(0.0f, 2.0f);
-
-            float selected = choice(rng); // Genera un número aleatorio que será 0 o 1
-
-            float r;
+            float r;  // Choice range.
             if (selected >= 1) {
-                // Utiliza la distribución uniforme top
                 r = uniform_top(rng);
             } else {
-                // Utiliza la distribución uniforme bottom
                 r = uniform_bottom(rng);
             }
-
-            //float scaled_r = r * spread; // Escalar el valor a tu intervalo deseado
             
-            outputs[OR_OUT_OUTPUT].setVoltage(r);
+            outputs[OR_OUT_OUTPUT].setVoltage(r);  // Set voltage.
             lastUpdateTime = std::chrono::steady_clock::now();
         }
     }
@@ -88,6 +84,7 @@ struct L_Random_testWidget : ModuleWidget {
         addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
         addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(30.614, 25.036)), module, L_Random_test::SPREAD_PARAM));
+        addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(10.614, 25.036)), module, L_Random_test::FREQ_PARAM));
 
         addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(30.458, 77.602)), module, L_Random_test::OR_OUT_OUTPUT));
     }
