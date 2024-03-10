@@ -30,6 +30,16 @@
         "test",
         "logic"
       ]
+    },
+    {
+      "slug": "L-Random",
+      "name": "L-Random",
+      "description": "Generate four individual or syncronized random states (constant and pulsed).",
+      "tags": [
+        "random",
+        "pulse",
+        "logic"
+      ]
     }
   ]
 }
