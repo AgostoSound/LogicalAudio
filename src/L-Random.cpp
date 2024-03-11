@@ -63,31 +63,31 @@ struct L_Random : Module {
 		// Components.
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);  // All params.
 
-		configParam(L_C_FREQ_PARAM, 1.f, 9.f, 0.f, "C-Freq");  // Constant frequency.
-		configParam(L_CR_FREQ_PARAM, 1.f, 9.f, 0.f, "CR-Freq");  // Constant rectified frequency.
-		configParam(R_C_FREQ_PARAM, 1.f, 9.f, 0.f, "P-Freq");  // Pulsed frequency.
-		configParam(R_CR_FREQ_PARAM, 1.f, 9.f, 0.f, "PR-Freq");  // Pulsed rectified frequency.
-		configParam(L_C_SPREAD_PARAM, 1.f, 4.f, 1.f, "C-Spread");  // Constant spread.
-		configParam(L_CR_SPREAD_PARAM, 1.f, 9.f, 1.f, "CR-Spread");  // Constant rectified spread.
-		configParam(R_C_SPREAD_PARAM, 1.f, 4.f, 1.f, "P-Spread");  // Pulsed spread.
-		configParam(R_CR_SPREAD_PARAM, 1.f, 9.f, 1.f, "PR-Spread");  // Pulsed rectified spread.
+		configParam(L_C_FREQ_PARAM, 1.f, 9.f, 0.f, "Freq");  // Left bipolar frequency.
+		configParam(L_CR_FREQ_PARAM, 1.f, 9.f, 0.f, "Freq");  // Left unipolar frequency.
+		configParam(R_C_FREQ_PARAM, 1.f, 9.f, 0.f, "Freq");  // Right bipolar frequency.
+		configParam(R_CR_FREQ_PARAM, 1.f, 9.f, 0.f, "Freq");  // Right unipolar frequency.
+		configParam(L_C_SPREAD_PARAM, 1.f, 4.f, 1.f, "Spread");  // Left bipolar spread.
+		configParam(L_CR_SPREAD_PARAM, 1.f, 9.f, 1.f, "Spread");  // Left unipolar spread.
+		configParam(R_C_SPREAD_PARAM, 1.f, 4.f, 1.f, "Spread");  // Right bipolar spread.
+		configParam(R_CR_SPREAD_PARAM, 1.f, 9.f, 1.f, "Spread");  // Right unipolar spread.
 		
 		configInput(GENERAL_FREQ_INPUT, "General freq CV");  // General frequency CV.
 		configInput(GENERAL_SPREAD_INPUT, "General spread CV");  // General spread CV.
 
-		configInput(L_C_FREQ_CV_INPUT, "C-Freq CV");  // Constant frequency CV.
-		configInput(L_CR_FREQ_CV_INPUT, "CR-Freq CV");  // Constant rectified frequency CV.
-		configInput(R_C_FREQ_CV_INPUT, "P-Freq CV");  // Pulsed frequency CV.
-		configInput(R_CR_FREQ_CV_INPUT, "PR-Freq CV");  // Pulsed rectified frequency CV.
-		configInput(L_C_SPREAD_CV_INPUT, "C-Spread CV");  // Constant spread CV.
-		configInput(L_CR_SPREAD_CV_INPUT, "CR-Spread CV");  // Constant rectified spread CV.
-		configInput(R_C_SPREAD_CV_INPUT, "P-Spread CV");  // Pulsed spread CV.
-		configInput(R_CR_SPREAD_CV_INPUT, "PR-Spread CV");  // Pulsed rectified spread CV.
+		configInput(L_C_FREQ_CV_INPUT, "Freq CV");  // Left bipolar CV.
+		configInput(L_CR_FREQ_CV_INPUT, "Freq CV");  // Left unipolar CV.
+		configInput(R_C_FREQ_CV_INPUT, "Freq CV");  // Right bipolar CV.
+		configInput(R_CR_FREQ_CV_INPUT, "Freq CV");  // Right unipolar CV.
+		configInput(L_C_SPREAD_CV_INPUT, "Spread CV");  // Left bipolar CV.
+		configInput(L_CR_SPREAD_CV_INPUT, "Spread CV");  // Left unipolar CV.
+		configInput(R_C_SPREAD_CV_INPUT, "Spread CV");  // Right bipolar CV.
+		configInput(R_CR_SPREAD_CV_INPUT, "Spread CV");  // Right unipolar CV.
 
-		configOutput(L_CONST_OUTPUT, "Constant");  // Constant output.
-		configOutput(L_CONST_RECT_OUTPUT, "Constant rectified");  // Constant rectified output.
-		configOutput(R_CONST_OUTPUT, "Pulsed");  // Pulsed output.
-		configOutput(R_CONST_RECT_OUTPUT, "Pulsed rectified");  // Pulsed rectified output.
+		configOutput(L_CONST_OUTPUT, "Left bipolar");  // Left bipolar output.
+		configOutput(L_CONST_RECT_OUTPUT, "Left unipolar");  // Left unipolar output.
+		configOutput(R_CONST_OUTPUT, "Right bipolar");  // Right bipolar output.
+		configOutput(R_CONST_RECT_OUTPUT, "Right unipolar");  // Right unipolar output.
 	}
 
 	// To check if X milliseconds have passed.
