@@ -5,6 +5,7 @@
 #include <array>
 #include <vector>
 
+using namespace rack;
 
 struct L_Random : Module {
 	enum ParamId {
@@ -47,6 +48,7 @@ struct L_Random : Module {
     std::chrono::steady_clock::time_point lastUpdateTime2;  // Clock generator instance.
     std::chrono::steady_clock::time_point lastUpdateTime3;  // Clock generator instance.
     std::chrono::steady_clock::time_point lastUpdateTime4;  // Clock generator instance.
+	
 
     int ms1;
     int ms2;
@@ -115,18 +117,44 @@ struct L_Random : Module {
 
 	// Main logic.
 	void process(const ProcessArgs& args) override {
+		float freq_1;
+		float freq_2;
+		float freq_3;
+		float freq_4;
+		float spread_1;
+		float spread_2;
+		float spread_3;
+		float spread_4;
 
-        // Spread max and min controller.
-        float spread_1 = params[L_C_SPREAD_PARAM].getValue();
-        float spread_2 = params[L_CR_SPREAD_PARAM].getValue();
-        float spread_3 = params[R_C_SPREAD_PARAM].getValue();
-        float spread_4 = params[R_CR_SPREAD_PARAM].getValue();
+		if (inputs[GENERAL_SPREAD_INPUT].isConnected()) {
+			// Spread max and min controller.
+			float spread_1 = inputs[GENERAL_SPREAD_INPUT].getVoltage();
+			float spread_2 = inputs[GENERAL_SPREAD_INPUT].getVoltage();
+			float spread_3 = inputs[GENERAL_SPREAD_INPUT].getVoltage();
+			float spread_4 = inputs[GENERAL_SPREAD_INPUT].getVoltage();
+			
+		} else {
+			// Spread max and min controller.
+			float spread_1 = params[L_C_SPREAD_PARAM].getValue();
+			float spread_2 = params[L_CR_SPREAD_PARAM].getValue();
+			float spread_3 = params[R_C_SPREAD_PARAM].getValue();
+			float spread_4 = params[R_CR_SPREAD_PARAM].getValue();
+		}
 
-        // Update frequency controller.
-        float freq_1 = params[L_C_FREQ_PARAM].getValue();  
-        float freq_2 = params[L_CR_FREQ_PARAM].getValue();  
-        float freq_3 = params[R_C_FREQ_PARAM].getValue();  
-        float freq_4 = params[R_CR_FREQ_PARAM].getValue();  
+		if (inputs[GENERAL_FREQ_INPUT].isConnected()) {
+			// Update frequency controller.
+			float freq_1 = inputs[GENERAL_FREQ_INPUT].getVoltage();  
+			float freq_2 = inputs[GENERAL_FREQ_INPUT].getVoltage();  
+			float freq_3 = inputs[GENERAL_FREQ_INPUT].getVoltage();  
+			float freq_4 = inputs[GENERAL_FREQ_INPUT].getVoltage(); 
+			
+		} else {
+        	// Update frequency controller.
+			float freq_1 = params[L_C_FREQ_PARAM].getValue();  
+			float freq_2 = params[L_CR_FREQ_PARAM].getValue();  
+			float freq_3 = params[R_C_FREQ_PARAM].getValue();  
+			float freq_4 = params[R_CR_FREQ_PARAM].getValue(); 
+		}
         
 		ms1 = freq_1 * 100;
         ms2 = freq_2 * 100;
