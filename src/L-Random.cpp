@@ -121,6 +121,8 @@ struct L_Random : Module {
 
 	// Main logic.
 	void process(const ProcessArgs& args) override {
+		
+		// Get all values and declare vars.
 		float switch_g = params[GENERAL_SWITCH_PARAM].getValue();
 		float spread_g = params[GENERAL_SPREAD_PARAM].getValue();
 		float freq_g = params[GENERAL_FREQ_PARAM].getValue();  
@@ -128,7 +130,6 @@ struct L_Random : Module {
 		float spread_2 = params[L_CR_SPREAD_PARAM].getValue();
 		float spread_3 = (params[R_C_SPREAD_PARAM].getValue());
 		float spread_4 = params[R_CR_SPREAD_PARAM].getValue();
-
 		float freq_1 = params[L_C_FREQ_PARAM].getValue();  
 		float freq_2 = params[L_CR_FREQ_PARAM].getValue();  
 		float freq_3 = params[R_C_FREQ_PARAM].getValue();  
@@ -136,6 +137,7 @@ struct L_Random : Module {
 		float r_bipolar;
 		float r_unipolar;
 		
+		// Select general params.
 		if (switch_g == 1) {
 			spread_1 = (spread_g * 0.44);
 			spread_2 = spread_g;
@@ -147,6 +149,7 @@ struct L_Random : Module {
 			freq_3 = freq_g;  
 			freq_4 = freq_g; 
 		} 
+		// Select individual params.
 		else {
 			spread_1 = (spread_1 * 0.44);
 			spread_2 = spread_2;
@@ -159,11 +162,13 @@ struct L_Random : Module {
 			freq_4 = freq_4; 
 		}
         
+		// Base miniseconds range.
 		ms1 = freq_1 * 100;
         ms2 = freq_2 * 100;
         ms3 = freq_3 * 100;
         ms4 = freq_4 * 100;
         
+		// Use general parameters and generate a unique random values.
 		if (switch_g == 1) {
 			std::uniform_real_distribution<float> voltage_top((spread_1-1.0f), (spread_1+1.0f));  // Top range.
 			std::uniform_real_distribution<float> voltage_bottom(-(spread_1+1.0f), -(spread_1-1.0f));  // Bottom Range.
@@ -203,6 +208,7 @@ struct L_Random : Module {
 				lastUpdateTime4 = std::chrono::steady_clock::now();
 			}
 		}
+		// Individual parameters and random generators.
 		else {
 			// L Constant.
 			if (shouldUpdate1(ms1)) {  
