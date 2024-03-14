@@ -4,6 +4,8 @@
 #include <chrono>
 #include <array>
 #include <vector>
+#include <iostream>
+#include <cmath>
 
 using namespace rack;
 
@@ -17,11 +19,12 @@ struct L_Random : Module {
 		L_CR_SPREAD_PARAM,
 		R_C_SPREAD_PARAM,
 		R_CR_SPREAD_PARAM,
+		GENERAL_FREQ_PARAM,
+		GENERAL_SPREAD_PARAM,
+		GENERAL_SWITCH_PARAM,
 		PARAMS_LEN
 	};
 	enum InputId {
-		GENERAL_FREQ_INPUT,
-		GENERAL_SPREAD_INPUT,
 		L_C_FREQ_CV_INPUT,
 		L_CR_FREQ_CV_INPUT,
 		R_C_FREQ_CV_INPUT,
@@ -48,7 +51,6 @@ struct L_Random : Module {
     std::chrono::steady_clock::time_point lastUpdateTime2;  // Clock generator instance.
     std::chrono::steady_clock::time_point lastUpdateTime3;  // Clock generator instance.
     std::chrono::steady_clock::time_point lastUpdateTime4;  // Clock generator instance.
-	
 
     int ms1;
     int ms2;
@@ -65,18 +67,20 @@ struct L_Random : Module {
 		// Components.
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);  // All params.
 
+		configParam(GENERAL_SWITCH_PARAM, 0.f, 1.f, 0.f, "GENERAL SWITCH"); // GENERAL Switch
+
 		configParam(L_C_FREQ_PARAM, 1.f, 9.f, 0.f, "Freq");  // Left bipolar frequency.
 		configParam(L_CR_FREQ_PARAM, 1.f, 9.f, 0.f, "Freq");  // Left unipolar frequency.
 		configParam(R_C_FREQ_PARAM, 1.f, 9.f, 0.f, "Freq");  // Right bipolar frequency.
 		configParam(R_CR_FREQ_PARAM, 1.f, 9.f, 0.f, "Freq");  // Right unipolar frequency.
-		configParam(L_C_SPREAD_PARAM, 1.f, 4.f, 1.f, "Spread");  // Left bipolar spread.
+		configParam(L_C_SPREAD_PARAM, 1.f, 9.f, 1.f, "Spread");  // Left bipolar spread.
 		configParam(L_CR_SPREAD_PARAM, 1.f, 9.f, 1.f, "Spread");  // Left unipolar spread.
-		configParam(R_C_SPREAD_PARAM, 1.f, 4.f, 1.f, "Spread");  // Right bipolar spread.
+		configParam(R_C_SPREAD_PARAM, 1.f, 9.f, 1.f, "Spread");  // Right bipolar spread.
 		configParam(R_CR_SPREAD_PARAM, 1.f, 9.f, 1.f, "Spread");  // Right unipolar spread.
+		configParam(GENERAL_FREQ_PARAM, 1.f, 9.f, 1.f, "Freq");  // Right unipolar spread.
+		configParam(GENERAL_SPREAD_PARAM, 1.f, 9.f, 1.f, "Spread");  // Right unipolar spread.
 		
-		configInput(GENERAL_FREQ_INPUT, "General freq CV");  // General frequency CV.
-		configInput(GENERAL_SPREAD_INPUT, "General spread CV");  // General spread CV.
-
+	
 		configInput(L_C_FREQ_CV_INPUT, "Freq CV");  // Left bipolar CV.
 		configInput(L_CR_FREQ_CV_INPUT, "Freq CV");  // Left unipolar CV.
 		configInput(R_C_FREQ_CV_INPUT, "Freq CV");  // Right bipolar CV.
@@ -117,105 +121,143 @@ struct L_Random : Module {
 
 	// Main logic.
 	void process(const ProcessArgs& args) override {
-		float freq_1;
-		float freq_2;
-		float freq_3;
-		float freq_4;
-		float spread_1;
-		float spread_2;
-		float spread_3;
-		float spread_4;
+		float switch_g = params[GENERAL_SWITCH_PARAM].getValue();
+		float spread_g = params[GENERAL_SPREAD_PARAM].getValue();
+		float freq_g = params[GENERAL_FREQ_PARAM].getValue();  
+		float spread_1 = (params[L_C_SPREAD_PARAM].getValue());
+		float spread_2 = params[L_CR_SPREAD_PARAM].getValue();
+		float spread_3 = (params[R_C_SPREAD_PARAM].getValue());
+		float spread_4 = params[R_CR_SPREAD_PARAM].getValue();
 
-		if (inputs[GENERAL_SPREAD_INPUT].isConnected()) {
-			// Spread max and min controller.
-			float spread_1 = inputs[GENERAL_SPREAD_INPUT].getVoltage();
-			float spread_2 = inputs[GENERAL_SPREAD_INPUT].getVoltage();
-			float spread_3 = inputs[GENERAL_SPREAD_INPUT].getVoltage();
-			float spread_4 = inputs[GENERAL_SPREAD_INPUT].getVoltage();
-			
-		} else {
-			// Spread max and min controller.
-			float spread_1 = params[L_C_SPREAD_PARAM].getValue();
-			float spread_2 = params[L_CR_SPREAD_PARAM].getValue();
-			float spread_3 = params[R_C_SPREAD_PARAM].getValue();
-			float spread_4 = params[R_CR_SPREAD_PARAM].getValue();
-		}
+		float freq_1 = params[L_C_FREQ_PARAM].getValue();  
+		float freq_2 = params[L_CR_FREQ_PARAM].getValue();  
+		float freq_3 = params[R_C_FREQ_PARAM].getValue();  
+		float freq_4 = params[R_CR_FREQ_PARAM].getValue(); 
+		float r_bipolar;
+		float r_unipolar;
+		
+		if (switch_g == 1) {
+			spread_1 = (spread_g * 0.44);
+			spread_2 = spread_g;
+			spread_3 = (spread_g * 0.44);
+			spread_4 = spread_g;
 
-		if (inputs[GENERAL_FREQ_INPUT].isConnected()) {
-			// Update frequency controller.
-			float freq_1 = inputs[GENERAL_FREQ_INPUT].getVoltage();  
-			float freq_2 = inputs[GENERAL_FREQ_INPUT].getVoltage();  
-			float freq_3 = inputs[GENERAL_FREQ_INPUT].getVoltage();  
-			float freq_4 = inputs[GENERAL_FREQ_INPUT].getVoltage(); 
-			
-		} else {
-        	// Update frequency controller.
-			float freq_1 = params[L_C_FREQ_PARAM].getValue();  
-			float freq_2 = params[L_CR_FREQ_PARAM].getValue();  
-			float freq_3 = params[R_C_FREQ_PARAM].getValue();  
-			float freq_4 = params[R_CR_FREQ_PARAM].getValue(); 
+			freq_1 = freq_g;  
+			freq_2 = freq_g;  
+			freq_3 = freq_g;  
+			freq_4 = freq_g; 
+		} 
+		else {
+			spread_1 = (spread_1 * 0.44);
+			spread_2 = spread_2;
+			spread_3 = (spread_3 * 0.44);
+			spread_4 = spread_4;
+
+			freq_1 = freq_1;  
+			freq_2 = freq_2;  
+			freq_3 = freq_3;  
+			freq_4 = freq_4; 
 		}
         
 		ms1 = freq_1 * 100;
         ms2 = freq_2 * 100;
         ms3 = freq_3 * 100;
         ms4 = freq_4 * 100;
-        //ms = 300;  // TEST.
         
-        // L Constant.
-        if (shouldUpdate1(ms1)) {  
-            std::uniform_real_distribution<float> voltage_top((spread_1-1.0f), (spread_1+1.0f));  // Top range.
-            std::uniform_real_distribution<float> voltage_bottom(-(spread_1+1.0f), -(spread_1-1.0f));  // Bottom Range.
-            std::uniform_real_distribution<float> choice(0.0f, 2.0f);  // Range choicing.
-            float selected = choice(rng);  // Random from 0 to 2.
+		if (switch_g == 1) {
+			std::uniform_real_distribution<float> voltage_top((spread_1-1.0f), (spread_1+1.0f));  // Top range.
+			std::uniform_real_distribution<float> voltage_bottom(-(spread_1+1.0f), -(spread_1-1.0f));  // Bottom Range.
+			std::uniform_real_distribution<float> choice(0.0f, 2.0f);  // Range choicing.
+			float selected = choice(rng);  // Random from 0 to 2.
+			float r;  // Choice range.
+			if (selected >= 1) {
+				r = voltage_top(rng);
+			} else {
+				r = voltage_bottom(rng);
+			}
 
-            float r1;  // Choice range.
-            if (selected >= 1) {
-                r1 = voltage_top(rng);
-            } else {
-                r1 = voltage_bottom(rng);
-            }
-            outputs[L_CONST_OUTPUT].setVoltage(r1);  // Set voltage.
-			lastUpdateTime1 = std::chrono::steady_clock::now();
-		}
-		
-		// Rectified L constant.
-		if (shouldUpdate2(ms2)) {  
-            std::uniform_real_distribution<float> voltage_generated((spread_2-1.0f), (spread_2+1.0f));
-            
-			float r2;
-			r2 = voltage_generated(rng);
-            outputs[L_CONST_RECT_OUTPUT].setVoltage(r2);  // Set voltage.
-			lastUpdateTime2 = std::chrono::steady_clock::now();
-		}
+			r_bipolar = r;
+			r_unipolar = std::abs(r) * 2;
 
-		// R Constant.
-        if (shouldUpdate3(ms3)) {  
-            std::uniform_real_distribution<float> voltage_top((spread_3-1.0f), (spread_3+1.0f));  // Top range.
-            std::uniform_real_distribution<float> voltage_bottom(-(spread_3+1.0f), -(spread_3-1.0f));  // Bottom Range.
-            std::uniform_real_distribution<float> choice(0.0f, 2.0f);  // Range choicing.
-            float selected = choice(rng);  // Random from 0 to 2.
+			// L Constant.
+			if (shouldUpdate1(ms1)) {  
+				outputs[L_CONST_OUTPUT].setVoltage(r_bipolar);  // Set voltage.
+				lastUpdateTime1 = std::chrono::steady_clock::now();
+			}
+			
+			// Rectified L constant.
+			if (shouldUpdate2(ms2)) {  
+				outputs[L_CONST_RECT_OUTPUT].setVoltage(r_unipolar);  // Set voltage.
+				lastUpdateTime2 = std::chrono::steady_clock::now();
+			}
 
-            float r3;  // Choice range.
-            if (selected >= 1) {
-                r3 = voltage_top(rng);
-            } else {
-                r3 = voltage_bottom(rng);
-            }
-            outputs[R_CONST_OUTPUT].setVoltage(r3);  // Set voltage.
-			lastUpdateTime3 = std::chrono::steady_clock::now();
+			// R Constant.
+			if (shouldUpdate3(ms3)) {  
+				outputs[R_CONST_OUTPUT].setVoltage(r_bipolar);  // Set voltage.
+				lastUpdateTime3 = std::chrono::steady_clock::now();
+			}
+			
+			// Rectified R constant.
+			if (shouldUpdate4(ms4)) {  
+				outputs[R_CONST_RECT_OUTPUT].setVoltage(r_unipolar);  // Set voltage.
+				lastUpdateTime4 = std::chrono::steady_clock::now();
+			}
 		}
-		
-		// Rectified R constant.
-		if (shouldUpdate4(ms4)) {  
-            std::uniform_real_distribution<float> voltage_generated((spread_4-1.0f), (spread_4+1.0f));
-            
-			float r4;
-			r4 = voltage_generated(rng);
-            outputs[R_CONST_RECT_OUTPUT].setVoltage(r4);  // Set voltage.
-			lastUpdateTime4 = std::chrono::steady_clock::now();
-		}
+		else {
+			// L Constant.
+			if (shouldUpdate1(ms1)) {  
+				std::uniform_real_distribution<float> voltage_top((spread_1-1.0f), (spread_1+1.0f));  // Top range.
+				std::uniform_real_distribution<float> voltage_bottom(-(spread_1+1.0f), -(spread_1-1.0f));  // Bottom Range.
+				std::uniform_real_distribution<float> choice(0.0f, 2.0f);  // Range choicing.
+				float selected = choice(rng);  // Random from 0 to 2.
 
+				float r1;  // Choice range.
+				if (selected >= 1) {
+					r1 = voltage_top(rng);
+				} else {
+					r1 = voltage_bottom(rng);
+				}
+				outputs[L_CONST_OUTPUT].setVoltage(r1);  // Set voltage.
+				lastUpdateTime1 = std::chrono::steady_clock::now();
+			}
+			
+			// Rectified L constant.
+			if (shouldUpdate2(ms2)) {  
+				std::uniform_real_distribution<float> voltage_generated((spread_2-1.0f), (spread_2+1.0f));
+				
+				float r2;
+				r2 = voltage_generated(rng);
+				outputs[L_CONST_RECT_OUTPUT].setVoltage(r2);  // Set voltage.
+				lastUpdateTime2 = std::chrono::steady_clock::now();
+			}
+
+			// R Constant.
+			if (shouldUpdate3(ms3)) {  
+				std::uniform_real_distribution<float> voltage_top((spread_3-1.0f), (spread_3+1.0f));  // Top range.
+				std::uniform_real_distribution<float> voltage_bottom(-(spread_3+1.0f), -(spread_3-1.0f));  // Bottom Range.
+				std::uniform_real_distribution<float> choice(0.0f, 2.0f);  // Range choicing.
+				float selected = choice(rng);  // Random from 0 to 2.
+
+				float r3;  // Choice range.
+				if (selected >= 1) {
+					r3 = voltage_top(rng);
+				} else {
+					r3 = voltage_bottom(rng);
+				}
+				outputs[R_CONST_OUTPUT].setVoltage(r3);  // Set voltage.
+				lastUpdateTime3 = std::chrono::steady_clock::now();
+			}
+			
+			// Rectified R constant.
+			if (shouldUpdate4(ms4)) {  
+				std::uniform_real_distribution<float> voltage_generated((spread_4-1.0f), (spread_4+1.0f));
+				
+				float r4;
+				r4 = voltage_generated(rng);
+				outputs[R_CONST_RECT_OUTPUT].setVoltage(r4);  // Set voltage.
+				lastUpdateTime4 = std::chrono::steady_clock::now();
+			}
+		}
 	}
 };
 
@@ -230,7 +272,12 @@ struct L_RandomWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
+		// GENERAL SWITCH
+		addParam(createParam<CKSS>(mm2px(Vec(28.00, 28.00)), module, L_Random::GENERAL_SWITCH_PARAM));
+
 		// Knob params.
+		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(22.99, 20.74)), module, L_Random::GENERAL_FREQ_PARAM));
+		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(38.10, 20.74)), module, L_Random::GENERAL_SPREAD_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(7.671, 50.755)), module, L_Random::L_C_FREQ_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(20.272, 50.722)), module, L_Random::L_CR_FREQ_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(40.744, 50.788)), module, L_Random::R_C_FREQ_PARAM));
@@ -241,8 +288,6 @@ struct L_RandomWidget : ModuleWidget {
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(53.318, 74.831)), module, L_Random::R_CR_SPREAD_PARAM));
 
 		// Inputs.
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(22.919, 25.321)), module, L_Random::GENERAL_FREQ_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(38.092, 25.288)), module, L_Random::GENERAL_SPREAD_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.624, 62.738)), module, L_Random::L_C_FREQ_CV_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(20.225, 62.705)), module, L_Random::L_CR_FREQ_CV_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(40.697, 62.772)), module, L_Random::R_C_FREQ_CV_INPUT));
