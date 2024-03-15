@@ -77,8 +77,8 @@ struct L_Random : Module {
 		configParam(L_CR_SPREAD_PARAM, 1.f, 9.f, 1.f, "Spread");  // Left unipolar spread.
 		configParam(R_C_SPREAD_PARAM, 1.f, 9.f, 1.f, "Spread");  // Right bipolar spread.
 		configParam(R_CR_SPREAD_PARAM, 1.f, 9.f, 1.f, "Spread");  // Right unipolar spread.
-		configParam(GENERAL_FREQ_PARAM, 1.f, 9.f, 1.f, "Freq");  // Right unipolar spread.
-		configParam(GENERAL_SPREAD_PARAM, 1.f, 9.f, 1.f, "Spread");  // Right unipolar spread.
+		configParam(GENERAL_FREQ_PARAM, 1.f, 9.f, 1.f, "Freq");  // General unipolar freq.
+		configParam(GENERAL_SPREAD_PARAM, 1.f, 9.f, 1.f, "Spread");  // General unipolar spread.
 		
 	
 		configInput(L_C_FREQ_CV_INPUT, "Freq CV");  // Left bipolar CV.
@@ -118,11 +118,27 @@ struct L_Random : Module {
         return duration.count() >= ms; // 1000 ms = 1 segundo
     }
 
+	// Frequency input converter.
+	float freq_convert_in(float voltage) {
+		float voltage_out = voltage;
+		
+		if (voltage > 5) {voltage_out = 5;} 
+		else {
+			if (voltage < -5) {voltage_out = -5;} 
+			else {voltage_out = voltage;}
+		}
+		voltage_out = (((voltage_out + 6) * 0.8)) + 0.2;
+
+        return voltage_out;
+    }
+
 
 	// Main logic.
 	void process(const ProcessArgs& args) override {
 		
 		// Get all values and declare vars.
+
+		// Get params values.
 		float switch_g = params[GENERAL_SWITCH_PARAM].getValue();
 		float spread_g = params[GENERAL_SPREAD_PARAM].getValue();
 		float freq_g = params[GENERAL_FREQ_PARAM].getValue();  
@@ -133,7 +149,11 @@ struct L_Random : Module {
 		float freq_1 = params[L_C_FREQ_PARAM].getValue();  
 		float freq_2 = params[L_CR_FREQ_PARAM].getValue();  
 		float freq_3 = params[R_C_FREQ_PARAM].getValue();  
-		float freq_4 = params[R_CR_FREQ_PARAM].getValue(); 
+		float freq_4 = params[R_CR_FREQ_PARAM].getValue();
+
+		// Get inputs values.
+		float l_freq_cv = freq_convert_in(inputs[L_C_FREQ_CV_INPUT].getVoltage());
+
 		float r_bipolar;
 		float r_unipolar;
 		
@@ -156,17 +176,18 @@ struct L_Random : Module {
 			spread_3 = (spread_3 * 0.44);
 			spread_4 = spread_4;
 
-			freq_1 = freq_1;  
+			//freq_1 = freq_1;  
+			freq_1 = l_freq_cv;  
 			freq_2 = freq_2;  
 			freq_3 = freq_3;  
 			freq_4 = freq_4; 
 		}
         
 		// Base miniseconds range.
-		ms1 = freq_1 * 100;
-        ms2 = freq_2 * 100;
-        ms3 = freq_3 * 100;
-        ms4 = freq_4 * 100;
+		ms1 = freq_1 * 50;
+        ms2 = freq_2 * 50;
+        ms3 = freq_3 * 50;
+        ms4 = freq_4 * 50;
         
 		// Use general parameters and generate a unique random values.
 		if (switch_g == 1) {
