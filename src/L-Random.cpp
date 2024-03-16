@@ -118,7 +118,7 @@ struct L_Random : Module {
         return duration.count() >= ms; // 1000 ms = 1 segundo
     }
 
-	// Frequency input converter.
+	// Frequency input converter. ||  (-5V, +5V) --> (+1V, +9V)
 	float freq_convert_in(float voltage) {
 		float voltage_out = voltage;
 		
@@ -153,6 +153,9 @@ struct L_Random : Module {
 
 		// Get inputs values.
 		float l_freq_cv = freq_convert_in(inputs[L_C_FREQ_CV_INPUT].getVoltage());
+		float lr_freq_cv = freq_convert_in(inputs[L_CR_FREQ_CV_INPUT].getVoltage());
+		float r_freq_cv = freq_convert_in(inputs[R_C_FREQ_CV_INPUT].getVoltage());
+		float rr_freq_cv = freq_convert_in(inputs[R_CR_FREQ_CV_INPUT].getVoltage());
 
 		float r_bipolar;
 		float r_unipolar;
@@ -176,11 +179,15 @@ struct L_Random : Module {
 			spread_3 = (spread_3 * 0.44);
 			spread_4 = spread_4;
 
-			//freq_1 = freq_1;  
-			freq_1 = l_freq_cv;  
-			freq_2 = freq_2;  
-			freq_3 = freq_3;  
-			freq_4 = freq_4; 
+			// Select knob or CV for frequency.
+			if (inputs[L_C_FREQ_CV_INPUT].isConnected()) {freq_1 = l_freq_cv;}
+			else {freq_1 = freq_1;}
+			if (inputs[L_CR_FREQ_CV_INPUT].isConnected()) {freq_2 = lr_freq_cv;}
+			else {freq_2 = freq_2;}
+			if (inputs[R_C_FREQ_CV_INPUT].isConnected()) {freq_3 = r_freq_cv;}
+			else {freq_3 = freq_3;}
+			if (inputs[R_CR_FREQ_CV_INPUT].isConnected()) {freq_4 = rr_freq_cv;}
+			else {freq_4 = freq_4;}
 		}
         
 		// Base miniseconds range.
