@@ -132,6 +132,38 @@ struct L_Random : Module {
         return voltage_out;
     }
 
+	// Spread input converter. ||  (-5V, +5V) -->
+	float spread_convert_in(float voltage, bool isBipolar) {
+		float voltage_out = voltage;
+		
+		if (voltage > 5) {voltage_out = 5;} 
+		else {
+			if (voltage < -5) {voltage_out = -5;} 
+			else {voltage_out = voltage;}
+		}
+
+		if (isBipolar) {voltage_out = (voltage_out + 6) * 0.36;} 
+		else {voltage_out = (voltage_out + 6) * 0.8;}
+
+        return voltage_out;
+    }
+
+	void generateRandomVoltage(float spread, float& outputVoltage, bool isBipolar) {
+		std::uniform_real_distribution<float> voltage_top((spread-1.0f), (spread+1.0f));  // Top range.
+		std::uniform_real_distribution<float> voltage_bottom(-(spread+1.0f), -(spread-1.0f));  // Bottom Range.
+		std::uniform_real_distribution<float> choice(0.0f, 2.0f);  // Range choicing.
+		float selected = choice(rng);  // Random from 0 to 2.
+
+		float r;  // Choice range.
+		if (selected >= 1) {
+			r = voltage_top(rng);
+		} else {
+			r = voltage_bottom(rng);
+		}
+
+		outputVoltage = isBipolar ? r : std::abs(r) * 2;
+	}
+
 
 	// Main logic.
 	void process(const ProcessArgs& args) override {
@@ -142,6 +174,7 @@ struct L_Random : Module {
 		float switch_g = params[GENERAL_SWITCH_PARAM].getValue();
 		float spread_g = params[GENERAL_SPREAD_PARAM].getValue();
 		float freq_g = params[GENERAL_FREQ_PARAM].getValue();  
+		
 		float spread_1 = (params[L_C_SPREAD_PARAM].getValue());
 		float spread_2 = params[L_CR_SPREAD_PARAM].getValue();
 		float spread_3 = (params[R_C_SPREAD_PARAM].getValue());
@@ -151,11 +184,17 @@ struct L_Random : Module {
 		float freq_3 = params[R_C_FREQ_PARAM].getValue();  
 		float freq_4 = params[R_CR_FREQ_PARAM].getValue();
 
-		// Get inputs values.
+		// Get frequency input values.
 		float l_freq_cv = freq_convert_in(inputs[L_C_FREQ_CV_INPUT].getVoltage());
 		float lr_freq_cv = freq_convert_in(inputs[L_CR_FREQ_CV_INPUT].getVoltage());
 		float r_freq_cv = freq_convert_in(inputs[R_C_FREQ_CV_INPUT].getVoltage());
 		float rr_freq_cv = freq_convert_in(inputs[R_CR_FREQ_CV_INPUT].getVoltage());
+
+		// Get spread input values.
+		float l_spread_cv = spread_convert_in(inputs[L_C_SPREAD_CV_INPUT].getVoltage(), true);
+		float lr_spread_cv = spread_convert_in(inputs[L_CR_SPREAD_CV_INPUT].getVoltage(), false);
+		float r_spread_cv = spread_convert_in(inputs[R_C_SPREAD_CV_INPUT].getVoltage(), true);
+		float rr_spread_cv = spread_convert_in(inputs[R_CR_SPREAD_CV_INPUT].getVoltage(), false);
 
 		float r_bipolar;
 		float r_unipolar;
@@ -188,6 +227,16 @@ struct L_Random : Module {
 			else {freq_3 = freq_3;}
 			if (inputs[R_CR_FREQ_CV_INPUT].isConnected()) {freq_4 = rr_freq_cv;}
 			else {freq_4 = freq_4;}
+
+			// Select knob or CV for spread.
+			if (inputs[L_C_SPREAD_CV_INPUT].isConnected()) {spread_1 = l_spread_cv;}
+			else {spread_1 = spread_1;}
+			if (inputs[L_CR_SPREAD_CV_INPUT].isConnected()) {spread_2 = lr_spread_cv;}
+			else {spread_2 = spread_2;}
+			if (inputs[R_C_SPREAD_CV_INPUT].isConnected()) {spread_3 = r_spread_cv;}
+			else {spread_3 = spread_3;}
+			if (inputs[R_CR_SPREAD_CV_INPUT].isConnected()) {spread_4 = rr_spread_cv;}
+			else {spread_4 = spread_4;}
 		}
         
 		// Base miniseconds range.

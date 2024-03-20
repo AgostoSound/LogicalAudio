@@ -23,12 +23,13 @@
       ]
     },
     {
-      "slug": "L-Random-test",
-      "name": "L-Random-test",
+      "slug": "L-Rantics-test",
+      "name": "L-Rantics-test",
       "description": "test test",
       "tags": [
         "test",
-        "logic"
+        "logic",
+        "clock"
       ]
     },
     {

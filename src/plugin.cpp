@@ -9,7 +9,7 @@ void init(Plugin* p) {
 
 	// Add modules here
 	p->addModel(modelL_Carrier);
-	p->addModel(modelL_Random_test);
+	p->addModel(modelL_Rantics_test);
 	p->addModel(modelL_Random);
 
 	// Any other plugin initialization may go here.
