@@ -1,5 +1,11 @@
 #include "plugin.hpp"
+#include "random.hpp"
+#include <random>
 #include <chrono>
+#include <array>
+#include <vector>
+#include <iostream>
+#include <cmath>
 
 
 struct L_Rantics_test : Module {
@@ -18,30 +24,58 @@ struct L_Rantics_test : Module {
 		OUTPUTS_LEN
 	};
 	enum LightId {
-		LED2_LIGHT,
-		LED1_LIGHT,
 		LIGHTS_LEN
 	};
 
+	random::Xoroshiro128Plus rng;  // Pseudorandom number generator instance.
+    std::chrono::steady_clock::time_point lastUpdateTime;  // Clock generator instance.
+	int ms1;
+
 	L_Rantics_test() {
+		// Random states.
+		uint64_t seed0 = std::random_device{}();
+        uint64_t seed1 = std::random_device{}();
+        rng.seed(seed0, seed1);
+
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configParam(BEAT_FRAC_PARAM, 0.f, 1.f, 0.f, "");
-		configInput(CLOCK_INPUT, "");
+		configInput(CLOCK_INPUT, "Clock in");
 		configInput(BPM_INPUT, "");
 		configOutput(OUT2_OUTPUT, "");
 		configOutput(OUT1_OUTPUT, "");
 	}
 
-	float phase = 0.f;
-	float blinkPhase = 0.f;
+	bool lastClockTrigger = false; // Estado del reloj en el ciclo anterior
+    float lastVoltage = 0.0f; // Último voltaje generado
+
+    float minVoltage = -5.0f;
+    float maxVoltage = 5.0f;
 
 	void process(const ProcessArgs& args) override {
-		blinkPhase += args.sampleTime;
-		if (blinkPhase >= 1.f)
-			blinkPhase -= 1.f;
-		lights[LED1_LIGHT].setBrightness(blinkPhase < 0.5f ? 1.f : 0.f);
-		lights[LED2_LIGHT].setBrightness(blinkPhase < 0.5f ? 1.f : 0.f);
-		
+		// Leer el estado del reloj
+		bool clockTrigger = inputs[CLOCK_INPUT].getVoltage() >= 1.0f;
+
+		// Si se detecta un cambio en la señal del reloj
+		if (clockTrigger != lastClockTrigger) {
+			// Si hay un nuevo tic del reloj
+			if (clockTrigger) {
+				// Generar un voltaje aleatorio entre -5V y +5V
+				std::uniform_real_distribution<float> distribution(minVoltage, maxVoltage);
+				float randomVoltage = distribution(rng);
+
+				// Establecer el voltaje aleatorio en todas las salidas
+				outputs[OUT1_OUTPUT].setVoltage(randomVoltage);
+
+				// Guardar el último voltaje generado
+				lastVoltage = randomVoltage;
+			} else {
+				// Si el reloj deja de tener tic, mantener el último voltaje generado
+				outputs[OUT1_OUTPUT].setVoltage(lastVoltage);
+			}
+		}
+
+		// Actualizar el estado del reloj
+		lastClockTrigger = clockTrigger;
 	}
 };
 
@@ -64,8 +98,6 @@ struct L_Rantics_testWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(51.69, 88.162)), module, L_Rantics_test::OUT2_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(9.966, 88.676)), module, L_Rantics_test::OUT1_OUTPUT));
 
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(34.60, 113.60)), module, L_Rantics_test::LED2_LIGHT));
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(27.10, 113.60)), module, L_Rantics_test::LED1_LIGHT));
 	}
 };
 
