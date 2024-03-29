@@ -31,9 +31,14 @@ struct L_Rantics : Module {
 		LIGHTS_LEN
 	};
 
+	// Definir los valores permitidos
+	std::vector<std::__cxx11::basic_string<char>> fractions_labels = {"÷16", "÷8", "÷4", "÷2", "0", "x2", "x4", "x8", "x16"};
+	std::vector<float> original_fraction_values = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+	std::vector<float> normalized_fraction_values = {-16, -8, -4, -2, 0, 2, 4, 8, 16};
+
 	L_Rantics() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(BEAT_FRAC_PARAM, -16.f, 16.f, 1.f, "Beat Fraction");
+		configSwitch(BEAT_FRAC_PARAM, 0.f, 8.f, 4.f, "Beat Fraction", fractions_labels);
 		configParam(L_SPREAD_PARAM, 0.f, 1.f, 0.f, "");
 		configParam(R_SPREAD_PARAM, 0.f, 1.f, 0.f, "");
 		configParam(SELECT_PARAM, 0.f, 2.f, 1.f, "Beat selector");
@@ -45,7 +50,17 @@ struct L_Rantics : Module {
 		configOutput(OUT2_OUTPUT, "");
 	}
 
+	float normalizeBeatFraction(float value) {
+		auto it = std::find(original_fraction_values.begin(), original_fraction_values.end(), value);
+		size_t index = std::distance(original_fraction_values.begin(), it);
+    	return normalized_fraction_values[index];
+	}
+
+
 	void process(const ProcessArgs& args) override {
+		float beat_fraction = params[BEAT_FRAC_PARAM].getValue();
+		beat_fraction = normalizeBeatFraction(beat_fraction);
+		outputs[OUT1_OUTPUT].setVoltage(beat_fraction);  // Set voltage.
 	}
 };
 
