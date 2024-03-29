@@ -23,13 +23,12 @@
       ]
     },
     {
-      "slug": "L-Rantics-test",
-      "name": "L-Rantics-test",
-      "description": "test test",
+      "slug": "L-Rantics",
+      "name": "L-Rantics",
+      "description": "Random range voltages at clock or bpm time.",
       "tags": [
-        "test",
-        "logic",
-        "clock"
+        "random",
+        "bpm"
       ]
     },
     {

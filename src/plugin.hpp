@@ -9,5 +9,5 @@ extern Plugin* pluginInstance;
 
 // Declare each Model, defined in each module source file
 extern Model* modelL_Carrier;
-extern Model* modelL_Rantics_test;
+extern Model* modelL_Rantics;
 extern Model* modelL_Random;
