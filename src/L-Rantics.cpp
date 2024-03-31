@@ -53,8 +53,8 @@ struct L_Rantics : Module {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configSwitch(BEAT_FRAC_PARAM, 0.f, 8.f, 4.f, "Beat Fraction", fractions_labels);
 		configSwitch(SELECT_PARAM, 0.f, 2.f, 0.f, "Beat selector", selector_labels);
-		configParam(L_SPREAD_PARAM, 0.f, 1.f, 0.f, "L Spread");
-		configParam(R_SPREAD_PARAM, 0.f, 1.f, 0.f, "R Spread");
+		configParam(L_SPREAD_PARAM, 1.f, 9.f, 1.f, "L Spread");
+		configParam(R_SPREAD_PARAM, 1.f, 9.f, 1.f, "R Spread");
 		configInput(CLOCK_INPUT, "Clock");
 		configInput(BPM_INPUT, "BPM Signal");
 		configInput(L_CV_INPUT, "L CV Spread");
@@ -110,8 +110,12 @@ struct L_Rantics : Module {
 	void process(const ProcessArgs& args) override {
 		float beat_fraction = params[BEAT_FRAC_PARAM].getValue();  // Beat fraction param (0-8).
 		beat_fraction = normalizeBeatFraction(beat_fraction);  // Normalidez beat fraction. (-16 +16)
+
+		float spread_1 = params[L_SPREAD_PARAM].getValue();
+		float spread_2 = params[R_SPREAD_PARAM].getValue();
 		
-		outputs[OUT1_OUTPUT].setVoltage(beat_fraction);  // Set voltage.
+		outputs[OUT1_OUTPUT].setVoltage(spread_1);  // Set voltage.
+		outputs[OUT2_OUTPUT].setVoltage(spread_2);  // Set voltage.
 	}
 };
 
