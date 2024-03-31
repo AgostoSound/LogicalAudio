@@ -31,13 +31,25 @@ struct L_Rantics : Module {
 		LIGHTS_LEN
 	};
 
+	random::Xoroshiro128Plus rng;  // Pseudorandom number generator instance.
+    std::chrono::steady_clock::time_point lastUpdateTime1;  // Clock generator instance.
+    std::chrono::steady_clock::time_point lastUpdateTime2;  // Clock generator instance.	int ms1;
+	int ms1;
+	int ms2;
+
 	// Definir los valores permitidos
 	std::vector<std::__cxx11::basic_string<char>> fractions_labels = {"÷16", "÷8", "÷4", "÷2", "0", "x2", "x4", "x8", "x16"};
 	std::vector<std::__cxx11::basic_string<char>> selector_labels = {"Clock", "???", "BPM"};
 	std::vector<float> original_fraction_values = {0, 1, 2, 3, 4, 5, 6, 7, 8};
 	std::vector<float> normalized_fraction_values = {-16, -8, -4, -2, 0, 2, 4, 8, 16};
 
+	// init.
 	L_Rantics() {
+		// Random states.
+		uint64_t seed0 = std::random_device{}();
+        uint64_t seed1 = std::random_device{}();
+        rng.seed(seed0, seed1);
+
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configSwitch(BEAT_FRAC_PARAM, 0.f, 8.f, 4.f, "Beat Fraction", fractions_labels);
 		configSwitch(SELECT_PARAM, 0.f, 2.f, 0.f, "Beat selector", selector_labels);
@@ -51,14 +63,50 @@ struct L_Rantics : Module {
 		configOutput(OUT2_OUTPUT, "R Random");
 	}
 
+	bool lastClockTrigger = false; // Estado del reloj en el ciclo anterior
+    float lastVoltage = 0.0f; // Último voltaje generado
+
+    float minVoltage = -5.0f;
+    float maxVoltage = 5.0f;
+
 	// Beat fraction normalizer.
 	float normalizeBeatFraction(float value) {
+		// Map index to index between original and normalize values.
 		auto it = std::find(original_fraction_values.begin(), original_fraction_values.end(), value);
 		size_t index = std::distance(original_fraction_values.begin(), it);
     	return normalized_fraction_values[index];
 	}
 
+	// To check if X milliseconds have passed.
+	bool shouldUpdate1(int ms) {
+        auto now = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdateTime1);
+        return duration.count() >= ms; // 1000 ms = 1 segundo
+    }
+    bool shouldUpdate2(int ms) {
+        auto now = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdateTime2);
+        return duration.count() >= ms; // 1000 ms = 1 segundo
+    }
 
+	void generateRandomVoltage(float spread, float& outputVoltage, bool isBipolar) {
+		std::uniform_real_distribution<float> voltage_top((spread-1.0f), (spread+1.0f));  // Top range.
+		std::uniform_real_distribution<float> voltage_bottom(-(spread+1.0f), -(spread-1.0f));  // Bottom Range.
+		std::uniform_real_distribution<float> choice(0.0f, 2.0f);  // Range choicing.
+		float selected = choice(rng);  // Random from 0 to 2.
+
+		float r;  // Choice range.
+		if (selected >= 1) {
+			r = voltage_top(rng);
+		} else {
+			r = voltage_bottom(rng);
+		}
+
+		outputVoltage = isBipolar ? r : std::abs(r) * 2;
+	}
+
+
+	// MAIN LOGIC.
 	void process(const ProcessArgs& args) override {
 		float beat_fraction = params[BEAT_FRAC_PARAM].getValue();  // Beat fraction param (0-8).
 		beat_fraction = normalizeBeatFraction(beat_fraction);  // Normalidez beat fraction. (-16 +16)
