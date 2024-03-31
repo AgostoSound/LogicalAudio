@@ -7,7 +7,10 @@
 #include <iostream>
 #include <cmath>
 
+// General logic.
 struct L_Rantics : Module {
+	
+	// Connection variables to visual components.
 	enum ParamId {
 		BEAT_FRAC_PARAM,
 		L_SPREAD_PARAM,
@@ -33,11 +36,11 @@ struct L_Rantics : Module {
 
 	random::Xoroshiro128Plus rng;  // Pseudorandom number generator instance.
     std::chrono::steady_clock::time_point lastUpdateTime1;  // Clock generator instance.
-    std::chrono::steady_clock::time_point lastUpdateTime2;  // Clock generator instance.	int ms1;
+    std::chrono::steady_clock::time_point lastUpdateTime2;  // Clock generator instance.
 	int ms1;
 	int ms2;
 
-	// Definir los valores permitidos
+	// Avaliable values.
 	std::vector<std::__cxx11::basic_string<char>> fractions_labels = {"÷16", "÷8", "÷4", "÷2", "0", "x2", "x4", "x8", "x16"};
 	std::vector<std::__cxx11::basic_string<char>> selector_labels = {"Clock", "???", "BPM"};
 	std::vector<float> original_fraction_values = {0, 1, 2, 3, 4, 5, 6, 7, 8};
@@ -63,11 +66,14 @@ struct L_Rantics : Module {
 		configOutput(OUT2_OUTPUT, "R Random");
 	}
 
-	bool lastClockTrigger = false; // Estado del reloj en el ciclo anterior
-    float lastVoltage = 0.0f; // Último voltaje generado
+	bool lastClockTrigger = false; // Clock status in the previous cycle.
+    float lastVoltage1 = 0.0f; // Last generated voltage.
+    float lastVoltage2 = 0.0f; // Last generated voltage.
 
-    float minVoltage = -5.0f;
-    float maxVoltage = 5.0f;
+    float minVoltage = -1.0f;
+    float maxVoltage = 1.0f;
+	float l_volt;
+	float r_volt;
 
 	// Beat fraction normalizer.
 	float normalizeBeatFraction(float value) {
@@ -89,6 +95,32 @@ struct L_Rantics : Module {
         return duration.count() >= ms; // 1000 ms = 1 segundo
     }
 
+	float bpmSignalLimiterAndNormalizer(float value) {
+        float result;
+
+		if (value > 2) {
+			result = 2;
+		} else {
+			if (value < -2) {
+				result = -2;
+			} else {
+				result = value;
+			}
+		}
+
+		if (result == 0) {
+			result = 120;
+		} else {
+			if (result > 0) {
+				result = 120 * (1+result);
+			} else {
+				result = 120 / (1-result);
+			}
+		}
+
+        return result;
+    }
+
 	void generateRandomVoltage(float spread, float& outputVoltage, bool isBipolar) {
 		std::uniform_real_distribution<float> voltage_top((spread-1.0f), (spread+1.0f));  // Top range.
 		std::uniform_real_distribution<float> voltage_bottom(-(spread+1.0f), -(spread-1.0f));  // Bottom Range.
@@ -105,21 +137,67 @@ struct L_Rantics : Module {
 		outputVoltage = isBipolar ? r : std::abs(r) * 2;
 	}
 
-
 	// MAIN LOGIC.
 	void process(const ProcessArgs& args) override {
-		float beat_fraction = params[BEAT_FRAC_PARAM].getValue();  // Beat fraction param (0-8).
-		beat_fraction = normalizeBeatFraction(beat_fraction);  // Normalidez beat fraction. (-16 +16)
 
-		float spread_1 = params[L_SPREAD_PARAM].getValue();
-		float spread_2 = params[R_SPREAD_PARAM].getValue();
+		// Get and format initial cycle params.
+		float beat_fraction = params[BEAT_FRAC_PARAM].getValue();  // Beat fraction param (0-8).
+		beat_fraction = normalizeBeatFraction(beat_fraction);  // Normalized beat fraction. (-16 +16).
 		
-		outputs[OUT1_OUTPUT].setVoltage(spread_1);  // Set voltage.
-		outputs[OUT2_OUTPUT].setVoltage(spread_2);  // Set voltage.
+		float spread_1 = params[L_SPREAD_PARAM].getValue();  // L Spread (1-9).
+		float spread_2 = params[R_SPREAD_PARAM].getValue();  // R Spread (1-9).
+
+		float bpm_voltage_input = bpmSignalLimiterAndNormalizer(inputs[BPM_INPUT].getVoltage());  // BPM Input (-2 +2).
+		
+		bool clockTrigger = inputs[CLOCK_INPUT].getVoltage() >= 1.0f;  // Reading clock state.
+		
+		int selector = params[SELECT_PARAM].getValue();  // Selector  value.
+
+		// Beat source selection.
+		if (selector == 0) {  // Clock logic.
+			if (clockTrigger != lastClockTrigger) {  // If a change in the clock signal is detected.
+				if (clockTrigger) {  // New clock tic.
+					// Random voltages between -1V y +1V.
+					std::uniform_real_distribution<float> distribution_1(minVoltage, maxVoltage);  
+					std::uniform_real_distribution<float> distribution_2(minVoltage, maxVoltage);
+					
+					// Get random voltages.
+					float randomVoltage1 = distribution_1(rng);  
+					float randomVoltage2 = distribution_2(rng);
+
+					// Calculate final L-R voltages.
+					l_volt = spread_1 + randomVoltage1;  
+					r_volt = spread_2 + randomVoltage2;
+
+					// Update last voltages.
+					lastVoltage1 = randomVoltage1;
+					lastVoltage2 = randomVoltage2;
+				} else {
+					// Assign last L-R voltages.
+					l_volt = spread_1 + lastVoltage1;
+					r_volt = spread_2 + lastVoltage2;
+				}
+			}
+			lastClockTrigger = clockTrigger;  // Update clock state.
+
+		} else {
+
+		if (selector == 1) {  //  ??? Logic
+			selector = selector + 1;
+
+		} else {  // BPM Logic.
+			r_volt = bpm_voltage_input / 30;
+		}
+		}
+
+		// OUTS
+		outputs[OUT1_OUTPUT].setVoltage(l_volt);  // Set L voltage.
+		outputs[OUT2_OUTPUT].setVoltage(r_volt);  // Set R voltage.
 	}
 };
 
 
+// Visual components.
 struct L_RanticsWidget : ModuleWidget {
 	L_RanticsWidget(L_Rantics* module) {
 		setModule(module);
