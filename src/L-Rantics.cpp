@@ -95,6 +95,7 @@ struct L_Rantics : Module {
         return duration.count() >= ms; // 1000 ms = 1 segundo
     }
 
+	// -2 +2 Standar volt signal to 30-480 bpm scale.
 	float bpmSignalLimiterAndNormalizer(float value) {
         float result;
 
@@ -108,19 +109,12 @@ struct L_Rantics : Module {
 			}
 		}
 
-		if (result == 0) {
-			result = 120;
-		} else {
-			if (result > 0) {
-				result = 120 * (1+result);
-			} else {
-				result = 120 / (1-result);
-			}
-		}
+		result = 120 * (pow(2, result));  // bpm = 120 x 2^volt
 
         return result;
     }
 
+	// Random voltage generator.
 	void generateRandomVoltage(float spread, float& outputVoltage, bool isBipolar) {
 		std::uniform_real_distribution<float> voltage_top((spread-1.0f), (spread+1.0f));  // Top range.
 		std::uniform_real_distribution<float> voltage_bottom(-(spread+1.0f), -(spread-1.0f));  // Bottom Range.
@@ -186,7 +180,7 @@ struct L_Rantics : Module {
 			selector = selector + 1;
 
 		} else {  // BPM Logic.
-			r_volt = bpm_voltage_input / 30;
+			r_volt = bpm_voltage_input / 100;
 		}
 		}
 
