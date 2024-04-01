@@ -110,25 +110,23 @@ struct L_Rantics : Module {
 		}
 
 		result = 120 * (pow(2, result));  // bpm = 120 x 2^volt
-
+		result = (500 * result) / 120;
         return result;
     }
 
 	// Random voltage generator.
-	void generateRandomVoltage(float spread, float& outputVoltage, bool isBipolar) {
-		std::uniform_real_distribution<float> voltage_top((spread-1.0f), (spread+1.0f));  // Top range.
-		std::uniform_real_distribution<float> voltage_bottom(-(spread+1.0f), -(spread-1.0f));  // Bottom Range.
-		std::uniform_real_distribution<float> choice(0.0f, 2.0f);  // Range choicing.
-		float selected = choice(rng);  // Random from 0 to 2.
+	// void generateRandomVoltage(float spread) {
+	// 	std::uniform_real_distribution<float> value((spread-1.0f), (spread+1.0f));
+	// 	float output = abs(value);
+	// 	return output;
+	// }
 
-		float r;  // Choice range.
-		if (selected >= 1) {
-			r = voltage_top(rng);
-		} else {
-			r = voltage_bottom(rng);
-		}
-
-		outputVoltage = isBipolar ? r : std::abs(r) * 2;
+	float generateRandomVoltage(float spread) {
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_real_distribution<float> dis(spread - 1.0f, spread + 1.0f);
+		float output = dis(gen);
+		return output;
 	}
 
 	// MAIN LOGIC.
@@ -141,7 +139,8 @@ struct L_Rantics : Module {
 		float spread_1 = params[L_SPREAD_PARAM].getValue();  // L Spread (1-9).
 		float spread_2 = params[R_SPREAD_PARAM].getValue();  // R Spread (1-9).
 
-		float bpm_voltage_input = bpmSignalLimiterAndNormalizer(inputs[BPM_INPUT].getVoltage());  // BPM Input (-2 +2).
+		//float bpm_voltage_input = bpmSignalLimiterAndNormalizer(inputs[BPM_INPUT].getVoltage());  // BPM Input (-2 +2).
+		ms1 = bpmSignalLimiterAndNormalizer(inputs[BPM_INPUT].getVoltage());  // BPM Input (-2 +2).
 		
 		bool clockTrigger = inputs[CLOCK_INPUT].getVoltage() >= 1.0f;  // Reading clock state.
 		
@@ -180,7 +179,17 @@ struct L_Rantics : Module {
 			selector = selector + 1;
 
 		} else {  // BPM Logic.
-			r_volt = bpm_voltage_input / 100;
+
+			//l_volt = generateRandomVoltage(spread_1)
+			//r_volt = generateRandomVoltage(spread_2)
+
+			if (shouldUpdate1(ms1)) {
+				l_volt = generateRandomVoltage(spread_1);
+				r_volt = generateRandomVoltage(spread_2);
+				lastUpdateTime1 = std::chrono::steady_clock::now();
+			}
+			
+			// r_volt = bpm_voltage_input / 100;
 		}
 		}
 
