@@ -9,7 +9,6 @@
 
 // General logic.
 struct L_Rantics : Module {
-	
 	// Connection variables to visual components.
 	enum ParamId {
 		BEAT_FRAC_PARAM,
@@ -99,6 +98,18 @@ struct L_Rantics : Module {
 		std::uniform_real_distribution<float> dis(spread - 1.0f, spread + 1.0f);  // Applying spreads.
 		return dis(gen);
 	}
+	// Spread input converter. ||  (-5V, +5V) -->
+	float spread_convert_in(float voltage) {
+		float voltage_out = voltage;
+		
+		if (voltage > 5) {voltage_out = 5;} 
+		else {
+			if (voltage < -5) {voltage_out = -5;} 
+			else {voltage_out = voltage;}
+		}
+
+        return voltage_out + 6;
+    }
 
 	// MAIN LOGIC.
 	void process(const ProcessArgs& args) override {
@@ -109,9 +120,17 @@ struct L_Rantics : Module {
 		
 		float spread_1 = params[L_SPREAD_PARAM].getValue();  // L Spread (1-9).
 		float spread_2 = params[R_SPREAD_PARAM].getValue();  // R Spread (1-9).
+		
+		float spread_cv1 = spread_convert_in(inputs[L_CV_INPUT].getVoltage());
+		float spread_cv2 = spread_convert_in(inputs[R_CV_INPUT].getVoltage());
+
+		// Select knob or CV for spread.
+		if (inputs[L_CV_INPUT].isConnected()) {spread_1 = spread_cv1;}
+		else {spread_1 = spread_1;}
+		if (inputs[R_CV_INPUT].isConnected()) {spread_2 = spread_cv2;}
+		else {spread_2 = spread_2;}
 
 		ms = bpmSignalLimiterAndNormalizer(inputs[BPM_INPUT].getVoltage());  // BPM Input (-2 +2).
-		
 		bool clockTrigger = inputs[CLOCK_INPUT].getVoltage() >= 1.0f;  // Reading clock state.
 		
 		int selector = params[SELECT_PARAM].getValue();  // Selector  value.
