@@ -9,7 +9,8 @@
 
 // General logic.
 struct L_Rantics : Module {
-	// Connection variables to visual components.
+// --------------------   Variables to visual components.  ----------------------------------
+
 	enum ParamId {
 		BEAT_FRAC_PARAM,
 		L_SPREAD_PARAM,
@@ -33,6 +34,8 @@ struct L_Rantics : Module {
 		LIGHTS_LEN
 	};
 
+// --------------------   Set initial values  ----------------------------------
+
 	random::Xoroshiro128Plus rng;  // Pseudorandom number generator instance.
     std::chrono::steady_clock::time_point lastUpdateTime;  // Clock generator instance.
 
@@ -42,7 +45,17 @@ struct L_Rantics : Module {
 	std::vector<float> original_fraction_values = {0, 1, 2, 3, 4, 5, 6, 7, 8};
 	std::vector<float> normalized_fraction_values = {-16, -8, -4, -2, 0, 2, 4, 8, 16};
 
-	// init.
+	// Initial variables.
+	int ms;
+	bool lastClockTrigger = false; // Clock status in the previous cycle.
+    float lastVoltage1 = 0.0f; // Last generated voltage.
+    float lastVoltage2 = 0.0f; // Last generated voltage.
+    float minVoltage = -1.0f;
+    float maxVoltage = 1.0f;
+	float l_volt;
+	float r_volt;
+
+// -----------------------   Config module  ------------------------------------
 	L_Rantics() {
 		// Random states.
 		uint64_t seed0 = std::random_device{}();
@@ -62,15 +75,7 @@ struct L_Rantics : Module {
 		configOutput(OUT2_OUTPUT, "R Random");
 	}
 
-	// Initial variables.
-	int ms;
-	bool lastClockTrigger = false; // Clock status in the previous cycle.
-    float lastVoltage1 = 0.0f; // Last generated voltage.
-    float lastVoltage2 = 0.0f; // Last generated voltage.
-    float minVoltage = -1.0f;
-    float maxVoltage = 1.0f;
-	float l_volt;
-	float r_volt;
+// -----------------------   Functions  ----------------------------------------
 
 	// Beat fraction normalizer.
 	float normalizeBeatFraction(float value) {
@@ -111,7 +116,9 @@ struct L_Rantics : Module {
         return voltage_out + 6;
     }
 
-	// MAIN LOGIC.
+
+// -----------------------   MAIN LOGIC.  ----------------------------------------
+	
 	void process(const ProcessArgs& args) override {
 
 		// Get and format initial cycle params.
@@ -184,7 +191,7 @@ struct L_Rantics : Module {
 };  // End general structure.
 
 
-// Visual components.
+// -----------------------   Visual components  ----------------------------------------
 struct L_RanticsWidget : ModuleWidget {
 	L_RanticsWidget(L_Rantics* module) {
 		setModule(module);
