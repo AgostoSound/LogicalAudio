@@ -35,10 +35,7 @@ struct L_Rantics : Module {
 	};
 
 	random::Xoroshiro128Plus rng;  // Pseudorandom number generator instance.
-    std::chrono::steady_clock::time_point lastUpdateTime1;  // Clock generator instance.
-    std::chrono::steady_clock::time_point lastUpdateTime2;  // Clock generator instance.
-	int ms1;
-	int ms2;
+    std::chrono::steady_clock::time_point lastUpdateTime;  // Clock generator instance.
 
 	// Avaliable values.
 	std::vector<std::__cxx11::basic_string<char>> fractions_labels = {"÷16", "÷8", "÷4", "÷2", "0", "x2", "x4", "x8", "x16"};
@@ -66,10 +63,11 @@ struct L_Rantics : Module {
 		configOutput(OUT2_OUTPUT, "R Random");
 	}
 
+	// Initial variables.
+	int ms;
 	bool lastClockTrigger = false; // Clock status in the previous cycle.
     float lastVoltage1 = 0.0f; // Last generated voltage.
     float lastVoltage2 = 0.0f; // Last generated voltage.
-
     float minVoltage = -1.0f;
     float maxVoltage = 1.0f;
 	float l_volt;
@@ -82,51 +80,24 @@ struct L_Rantics : Module {
 		size_t index = std::distance(original_fraction_values.begin(), it);
     	return normalized_fraction_values[index];
 	}
-
 	// To check if X milliseconds have passed.
-	bool shouldUpdate1(int ms) {
+	bool shouldUpdate(int ms_arg) {
         auto now = std::chrono::steady_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdateTime1);
-        return duration.count() >= ms; // 1000 ms = 1 segundo
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdateTime);
+        return duration.count() >= ms_arg; // 1000 ms = 1 segundo
     }
-    bool shouldUpdate2(int ms) {
-        auto now = std::chrono::steady_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdateTime2);
-        return duration.count() >= ms; // 1000 ms = 1 segundo
-    }
-
 	// -2 +2 Standar volt signal to 30-480 bpm scale.
 	float bpmSignalLimiterAndNormalizer(float value) {
-        float result;
-
-		if (value > 2) {
-			result = 2;
-		} else {
-			if (value < -2) {
-				result = -2;
-			} else {
-				result = value;
-			}
-		}
-
-		result = 120 * (pow(2, result));  // bpm = 120 x 2^volt
-		result = (500 * result) / 120;
+        float result = 120 * (pow(2, value));  // bpm = 120 x 2^volt;
+		result = 60000/result;
         return result;
     }
-
-	// Random voltage generator.
-	// void generateRandomVoltage(float spread) {
-	// 	std::uniform_real_distribution<float> value((spread-1.0f), (spread+1.0f));
-	// 	float output = abs(value);
-	// 	return output;
-	// }
-
+	// Random spreaded voltage generator.
 	float generateRandomVoltage(float spread) {
 		std::random_device rd;
 		std::mt19937 gen(rd());
-		std::uniform_real_distribution<float> dis(spread - 1.0f, spread + 1.0f);
-		float output = dis(gen);
-		return output;
+		std::uniform_real_distribution<float> dis(spread - 1.0f, spread + 1.0f);  // Applying spreads.
+		return dis(gen);
 	}
 
 	// MAIN LOGIC.
@@ -139,8 +110,7 @@ struct L_Rantics : Module {
 		float spread_1 = params[L_SPREAD_PARAM].getValue();  // L Spread (1-9).
 		float spread_2 = params[R_SPREAD_PARAM].getValue();  // R Spread (1-9).
 
-		//float bpm_voltage_input = bpmSignalLimiterAndNormalizer(inputs[BPM_INPUT].getVoltage());  // BPM Input (-2 +2).
-		ms1 = bpmSignalLimiterAndNormalizer(inputs[BPM_INPUT].getVoltage());  // BPM Input (-2 +2).
+		ms = bpmSignalLimiterAndNormalizer(inputs[BPM_INPUT].getVoltage());  // BPM Input (-2 +2).
 		
 		bool clockTrigger = inputs[CLOCK_INPUT].getVoltage() >= 1.0f;  // Reading clock state.
 		
@@ -178,26 +148,21 @@ struct L_Rantics : Module {
 		if (selector == 1) {  //  ??? Logic
 			selector = selector + 1;
 
-		} else {  // BPM Logic.
-
-			//l_volt = generateRandomVoltage(spread_1)
-			//r_volt = generateRandomVoltage(spread_2)
-
-			if (shouldUpdate1(ms1)) {
+		} 
+		else {  // BPM Logic.
+			if (shouldUpdate(ms)) {
 				l_volt = generateRandomVoltage(spread_1);
 				r_volt = generateRandomVoltage(spread_2);
-				lastUpdateTime1 = std::chrono::steady_clock::now();
-			}
-			
-			// r_volt = bpm_voltage_input / 100;
-		}
-		}
+				lastUpdateTime = std::chrono::steady_clock::now();
+			} 
+		}}
 
 		// OUTS
 		outputs[OUT1_OUTPUT].setVoltage(l_volt);  // Set L voltage.
 		outputs[OUT2_OUTPUT].setVoltage(r_volt);  // Set R voltage.
-	}
-};
+
+};  // End main logic.
+};  // End general structure.
 
 
 // Visual components.
