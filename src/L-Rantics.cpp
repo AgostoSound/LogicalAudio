@@ -9,7 +9,7 @@
 
 // General logic.
 struct L_Rantics : Module {
-// --------------------   Variables to visual components.  ----------------------------------
+// --------------------   Variables to visual components.  ---------------------
 
 	enum ParamId {
 		BEAT_FRAC_PARAM,
@@ -36,8 +36,11 @@ struct L_Rantics : Module {
 
 // --------------------   Set initial values  ----------------------------------
 
+	float phase = 0.f;
 	random::Xoroshiro128Plus rng;  // Pseudorandom number generator instance.
     std::chrono::steady_clock::time_point lastUpdateTime;  // Clock generator instance.
+    std::chrono::steady_clock::time_point lastUpdateTimeL;  // Clock generator instance.
+    std::chrono::steady_clock::time_point lastUpdateTimeR;  // Clock generator instance.
 
 	// Avaliable values.
 	std::vector<std::__cxx11::basic_string<char>> fractions_labels = {"÷16", "÷8", "÷4", "÷2", "0", "x2", "x4", "x8", "x16"};
@@ -47,6 +50,8 @@ struct L_Rantics : Module {
 
 	// Initial variables.
 	int ms;
+	int ms_l = 500;
+	int ms_r = 250;
 	bool lastClockTrigger = false; // Clock status in the previous cycle.
     float lastVoltage1 = 0.0f; // Last generated voltage.
     float lastVoltage2 = 0.0f; // Last generated voltage.
@@ -84,11 +89,23 @@ struct L_Rantics : Module {
 		size_t index = std::distance(original_fraction_values.begin(), it);
     	return normalized_fraction_values[index];
 	}
-	// To check if X milliseconds have passed.
+	// To check if X milliseconds have passed (For BPM Signal).
 	bool shouldUpdate(int ms_arg) {
         auto now = std::chrono::steady_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdateTime);
         return duration.count() >= ms_arg; // 1000 ms = 1 segundo
+    }
+	// To check if X milliseconds have passed (For Vampi L).
+	bool shouldUpdate_L(int ms_l) {
+        auto now = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdateTimeL);
+        return duration.count() >= ms_l; // 1000 ms = 1 segundo
+    }
+	// To check if X milliseconds have passed (For Vampi R).
+	bool shouldUpdate_R(int ms_r) {
+        auto now = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdateTimeR);
+        return duration.count() >= ms_r; // 1000 ms = 1 segundo
     }
 	// -2 +2 Standar volt signal to 30-480 bpm scale.
 	float bpmSignalLimiterAndNormalizer(float value) {
@@ -117,7 +134,7 @@ struct L_Rantics : Module {
     }
 
 
-// -----------------------   MAIN LOGIC.  ----------------------------------------
+// -----------------------   MAIN LOGIC.  --------------------------------------
 	
 	void process(const ProcessArgs& args) override {
 
@@ -172,8 +189,14 @@ struct L_Rantics : Module {
 		} else {
 
 		if (selector == 1) {  //  ??? Logic
-			selector = selector + 1;
-
+			if (shouldUpdate_L(ms_l)) {
+				l_volt = generateRandomVoltage(spread_1);
+				lastUpdateTimeL = std::chrono::steady_clock::now();
+			}
+			if (shouldUpdate_R(ms_r)) {
+				r_volt = generateRandomVoltage(spread_2);
+				lastUpdateTimeR = std::chrono::steady_clock::now();
+			}
 		} 
 		else {  // BPM Logic.
 			if (shouldUpdate(ms)) {
