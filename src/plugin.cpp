@@ -11,6 +11,8 @@ void init(Plugin* p) {
 	p->addModel(modelL_Carrier);
 	p->addModel(modelL_Rantics);
 	p->addModel(modelL_Random);
+	p->addModel(modelL_Panel);
+
 
 	// Any other plugin initialization may go here.
 	// As an alternative, consider lazy-loading assets and lookup tables when your module is created to reduce startup times of Rack.

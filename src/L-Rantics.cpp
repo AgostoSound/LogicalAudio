@@ -7,9 +7,9 @@
 #include <iostream>
 #include <cmath>
 
-// General logic.
+// General structure.
 struct L_Rantics : Module {
-// --------------------   Variables to visual components.  ---------------------
+// --------------------   Visual components namespace  ---------------------------
 
 	enum ParamId {
 		BEAT_FRAC_PARAM,
@@ -34,7 +34,7 @@ struct L_Rantics : Module {
 		LIGHTS_LEN
 	};
 
-// --------------------   Set initial values  ----------------------------------
+// --------------------   Set initial values  ------------------------------------
 
 	float phase = 0.f;
 	random::Xoroshiro128Plus rng;  // Pseudorandom number generator instance.
@@ -60,7 +60,7 @@ struct L_Rantics : Module {
 	float l_volt;
 	float r_volt;
 
-// -----------------------   Config module  ------------------------------------
+// --------------------   Config module  -----------------------------------------
 	L_Rantics() {
 		// Random states.
 		uint64_t seed0 = std::random_device{}();
@@ -80,7 +80,7 @@ struct L_Rantics : Module {
 		configOutput(OUT2_OUTPUT, "R Random");
 	}
 
-// -----------------------   Functions  ----------------------------------------
+// --------------------   Functions  ---------------------------------------------
 
 	// Beat fraction normalizer.
 	float normalizeBeatFraction(float value) {
@@ -134,8 +134,8 @@ struct L_Rantics : Module {
     }
 
 
-// -----------------------   MAIN LOGIC.  --------------------------------------
-	
+// --------------------   Main cycle logic  --------------------------------------
+
 	void process(const ProcessArgs& args) override {
 
 		// Get and format initial cycle params.
@@ -210,11 +210,11 @@ struct L_Rantics : Module {
 		outputs[OUT1_OUTPUT].setVoltage(l_volt);  // Set L voltage.
 		outputs[OUT2_OUTPUT].setVoltage(r_volt);  // Set R voltage.
 
-};  // End main logic.
+};  // End main cycle logic.
 };  // End general structure.
 
 
-// -----------------------   Visual components  ----------------------------------------
+// --------------------   Visual components  -------------------------------------
 struct L_RanticsWidget : ModuleWidget {
 	L_RanticsWidget(L_Rantics* module) {
 		setModule(module);
