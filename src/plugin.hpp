@@ -11,3 +11,4 @@ extern Plugin* pluginInstance;
 extern Model* modelL_Carrier;
 extern Model* modelL_Rantics;
 extern Model* modelL_Random;
+extern Model* modelL_Panel;

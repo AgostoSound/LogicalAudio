@@ -40,6 +40,14 @@
         "pulse",
         "logic"
       ]
+    },
+    {
+      "slug": "L-Panel",
+      "name": "L-Panel",
+      "description": "Just a cool panel.",
+      "tags": [
+        "panel"
+      ]
     }
   ]
 }
