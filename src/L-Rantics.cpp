@@ -54,20 +54,20 @@ struct L_RanticsWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(13.571, 73)), module, L_Rantics::L_SPREAD_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(48.496, 73)), module, L_Rantics::R_SPREAD_PARAM));
+		addParam(createParamCentered<BefacoTinyKnob>(mm2px(Vec(13.571, 73.8)), module, L_Rantics::L_SPREAD_PARAM));
+		addParam(createParamCentered<BefacoTinyKnob>(mm2px(Vec(48.496, 73.8)), module, L_Rantics::R_SPREAD_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(30.531, 35)), module, L_Rantics::SELECT_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(12.471, 35)), module, L_Rantics::CLOCK_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(48.391, 35)), module, L_Rantics::BPM_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(30.504, 52)), module, L_Rantics::BEAT_FRAC_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(13.466, 87)), module, L_Rantics::L_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(48.258, 87)), module, L_Rantics::R_CV_INPUT));
+		addParam(createParam<CKSS>(mm2px(Vec(30.504, 49.33)), module, L_Rantics::BEAT_FRAC_INPUT));
+		addParam(createParam<CKSS>(mm2px(Vec(25.40, 33.30)), module, L_Rantics::SELECT_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(13.273, 106)), module, L_Rantics::OUT1_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(48.383, 106)), module, L_Rantics::OUT2_OUTPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(12.471, 35.84)), module, L_Rantics::CLOCK_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(48.391, 35.84)), module, L_Rantics::BPM_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(13.466, 87.3)), module, L_Rantics::L_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(48.258, 87.3)), module, L_Rantics::R_CV_INPUT));
+
+		addOutput(createOutputCentered<PJ3410Port>(mm2px(Vec(13.273, 106.29)), module, L_Rantics::OUT1_OUTPUT));
+		addOutput(createOutputCentered<PJ3410Port>(mm2px(Vec(48.383, 106.29)), module, L_Rantics::OUT2_OUTPUT));
 	}
 };
-
 
 Model* modelL_Rantics = createModel<L_Rantics, L_RanticsWidget>("L-Rantics");
