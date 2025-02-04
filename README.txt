@@ -39,8 +39,6 @@ If the selector is on Gates and none is connected, the output is 0V on both side
 Cambios pendientes:
 (Front)
 - Reemplazar knob de Beat Fraction por un swith de polaridad.
-- Cambiar el label Spread por LvL
-- Cambiar Clock y BPM por Gate inputs
 - Cambiar el selector por uno vertical de 2 estados (Vampi o Gates).
 
 (Back)

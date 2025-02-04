@@ -23,15 +23,6 @@
       ]
     },
     {
-      "slug": "L-Rantics",
-      "name": "L-Rantics",
-      "description": "Random range voltages at clock or bpm time.",
-      "tags": [
-        "random",
-        "bpm"
-      ]
-    },
-    {
       "slug": "L-Random",
       "name": "L-Random",
       "description": "Generate four individual or syncronized random states (constant and pulsed).",
@@ -47,6 +38,15 @@
       "description": "Just a cool panel.",
       "tags": [
         "panel"
+      ]
+    },
+    {
+      "slug": "L-Rantics",
+      "name": "L-Rantics",
+      "description": "Two random voltages within a range of +1V/-1V around a central voltage.",
+      "tags": [
+        "random",
+        "cv"
       ]
     }
   ]
