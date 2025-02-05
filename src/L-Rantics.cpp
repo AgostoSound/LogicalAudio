@@ -30,8 +30,8 @@ struct L_Rantics : Module {
 	L_Rantics() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 
-		configParam(L_SPREAD_PARAM, 0.f, 1.f, 0.f, "LvL L");
-		configParam(R_SPREAD_PARAM, 0.f, 1.f, 0.f, "LvL R");
+		configParam(L_SPREAD_PARAM, 1.f, 9.f, 1.f, "LvL L");
+		configParam(R_SPREAD_PARAM, 1.f, 9.f, 1.f, "LvL R");
 
 		configParam(POLARITY_PARAM, 0.f, 1.f, 0.f, "Polarity");
 		configParam(TIC_SELECTOR_PARAM, 0.f, 1.f, 0.f, "Tic Selector");
@@ -46,13 +46,18 @@ struct L_Rantics : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		// Obtiene el valor del parámetro de polaridad.
+		// Obtiene el valor del parámetro de polaridad y enciende LED correspondiente.
 		float polarity = params[POLARITY_PARAM].getValue();
-
-		// Encender el LED correspondiente.
 		lights[UNIPOLAR_LED_LIGHT].setBrightness(polarity == 0.f ? 1.f : 0.f);
 		lights[BIPOLAR_LED_LIGHT].setBrightness(polarity == 1.f ? 1.f : 0.f);
 
+		// Cuantización de L_SPREAD_PARAM y R_SPREAD_PARAM
+		float L_lvl = params[L_SPREAD_PARAM].getValue();
+		float R_lvl = params[R_SPREAD_PARAM].getValue();
+
+		// Salidas.
+		outputs[OUT1_OUTPUT].setVoltage(L_lvl);
+		outputs[OUT2_OUTPUT].setVoltage(R_lvl);
 	}
 };
 
