@@ -1,7 +1,17 @@
 #include "plugin.hpp"
+#include "random.hpp"
+#include <random>
+#include <chrono>
+#include <array>
+#include <vector>
+#include <iostream>
+#include <cmath>
 
 
+// General structure.
 struct L_Rantics : Module {
+// --------------------   Visual components namespace  ---------------------------
+
 	enum ParamId {
 		L_SPREAD_PARAM,
 		R_SPREAD_PARAM,
@@ -27,11 +37,23 @@ struct L_Rantics : Module {
 		LIGHTS_LEN
 	};
 
+// --------------------   Set initial values  ------------------------------------
+	std::vector<std::__cxx11::basic_string<char>> lvl_labels = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
+	random::Xoroshiro128Plus rng;  // Pseudorandom number generator instance.
+
+
+
+// --------------------   Config module  -----------------------------------------
 	L_Rantics() {
+		// Random states.
+		uint64_t seed0 = std::random_device{}();
+        uint64_t seed1 = std::random_device{}();
+        rng.seed(seed0, seed1);
+
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 
-		configParam(L_SPREAD_PARAM, 1.f, 9.f, 1.f, "LvL L");
-		configParam(R_SPREAD_PARAM, 1.f, 9.f, 1.f, "LvL R");
+		configSwitch(L_SPREAD_PARAM, 1.f, 9.f, 1.f, "LvL L", lvl_labels);
+		configSwitch(R_SPREAD_PARAM, 1.f, 9.f, 1.f, "LvL R", lvl_labels);
 
 		configParam(POLARITY_PARAM, 0.f, 1.f, 0.f, "Polarity");
 		configParam(TIC_SELECTOR_PARAM, 0.f, 1.f, 0.f, "Tic Selector");
@@ -44,6 +66,9 @@ struct L_Rantics : Module {
 		configOutput(OUT1_OUTPUT, "Random L");
 		configOutput(OUT2_OUTPUT, "Random R");
 	}
+
+
+// --------------------   Main cycle logic  --------------------------------------
 
 	void process(const ProcessArgs& args) override {
 		// Obtiene el valor del parámetro de polaridad y enciende LED correspondiente.
@@ -61,6 +86,8 @@ struct L_Rantics : Module {
 	}
 };
 
+
+// --------------------   Visual components  -------------------------------------
 
 struct L_RanticsWidget : ModuleWidget {
 	L_RanticsWidget(L_Rantics* module) {

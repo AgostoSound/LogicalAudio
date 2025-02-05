@@ -1,121 +1,245 @@
 #include "plugin.hpp"
+#include "random.hpp"
+#include <random>
+#include <chrono>
+#include <array>
+#include <vector>
+#include <iostream>
+#include <cmath>
 
+// General structure.
+struct L_Rantics : Module {
+// --------------------   Visual components namespace  ---------------------------
 
-struct L_Carrier : Module {
-
-	// Declare parameters.
 	enum ParamId {
+		BEAT_FRAC_PARAM,
+		L_SPREAD_PARAM,
+		R_SPREAD_PARAM,
+		SELECT_PARAM,
 		PARAMS_LEN
 	};
 	enum InputId {
-		A_IN_INPUT,
-		B_IN_INPUT,
-		AUDIO_IN_INPUT,
+		CLOCK_INPUT,
+		BPM_INPUT,
+		L_CV_INPUT,
+		R_CV_INPUT,
 		INPUTS_LEN
 	};
 	enum OutputId {
-		AND_OUT_OUTPUT,
-		OR_OUT_OUTPUT,
-		XOR_OUT_OUTPUT,
-		NAND_OUT_OUTPUT,
-		NOT_OUT_OUTPUT,
-		XNOR_OUT_OUTPUT,
+		OUT1_OUTPUT,
+		OUT2_OUTPUT,
 		OUTPUTS_LEN
 	};
 	enum LightId {
-		A_LED_LIGHT,
-		B_LED_LIGHT,
 		LIGHTS_LEN
 	};
 
-	// Initial configuration.
-	L_Carrier() {
+// --------------------   Set initial values  ------------------------------------
+
+	float phase = 0.f;
+	random::Xoroshiro128Plus rng;  // Pseudorandom number generator instance.
+    std::chrono::steady_clock::time_point lastUpdateTime;  // Clock generator instance.
+    std::chrono::steady_clock::time_point lastUpdateTimeL;  // Clock generator instance.
+    std::chrono::steady_clock::time_point lastUpdateTimeR;  // Clock generator instance.
+
+	// Avaliable values.
+	std::vector<std::__cxx11::basic_string<char>> fractions_labels = {"÷16", "÷8", "÷4", "÷2", "0", "x2", "x4", "x8", "x16"};
+	std::vector<std::__cxx11::basic_string<char>> selector_labels = {"Clock", "???", "BPM"};
+	std::vector<float> original_fraction_values = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+	std::vector<float> normalized_fraction_values = {-16, -8, -4, -2, 0, 2, 4, 8, 16};
+
+	// Initial variables.
+	int ms;
+	int ms_l = 500;
+	int ms_r = 250;
+	bool lastClockTrigger = false; // Clock status in the previous cycle.
+    float lastVoltage1 = 0.0f; // Last generated voltage.
+    float lastVoltage2 = 0.0f; // Last generated voltage.
+    float minVoltage = -1.0f;
+    float maxVoltage = 1.0f;
+	float l_volt;
+	float r_volt;
+
+// --------------------   Config module  -----------------------------------------
+	L_Rantics() {
+		// Random states.
+		uint64_t seed0 = std::random_device{}();
+        uint64_t seed1 = std::random_device{}();
+        rng.seed(seed0, seed1);
+
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configInput(A_IN_INPUT, "");
-		configInput(B_IN_INPUT, "");
-		configInput(AUDIO_IN_INPUT, "");
-		configOutput(AND_OUT_OUTPUT, "");
-		configOutput(OR_OUT_OUTPUT, "");
-		configOutput(XOR_OUT_OUTPUT, "");
-		configOutput(NAND_OUT_OUTPUT, "");
-		configOutput(NOT_OUT_OUTPUT, "");
-		configOutput(XNOR_OUT_OUTPUT, "");
+		configSwitch(BEAT_FRAC_PARAM, 0.f, 8.f, 4.f, "Beat Fraction", fractions_labels);
+		configSwitch(SELECT_PARAM, 0.f, 2.f, 0.f, "Beat selector", selector_labels);
+		configParam(L_SPREAD_PARAM, 1.f, 9.f, 1.f, "L Spread");
+		configParam(R_SPREAD_PARAM, 1.f, 9.f, 1.f, "R Spread");
+		configInput(CLOCK_INPUT, "Clock");
+		configInput(BPM_INPUT, "BPM Signal");
+		configInput(L_CV_INPUT, "L CV Spread");
+		configInput(R_CV_INPUT, "R CV Spread");
+		configOutput(OUT1_OUTPUT, "L Random");
+		configOutput(OUT2_OUTPUT, "R Random");
 	}
 
-	// Main logic.
+// --------------------   Functions  ---------------------------------------------
+
+	// Beat fraction normalizer.
+	float normalizeBeatFraction(float value) {
+		// Map index to index between original and normalize values.
+		auto it = std::find(original_fraction_values.begin(), original_fraction_values.end(), value);
+		size_t index = std::distance(original_fraction_values.begin(), it);
+    	return normalized_fraction_values[index];
+	}
+	// To check if X milliseconds have passed (For BPM Signal).
+	bool shouldUpdate(int ms_arg) {
+        auto now = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdateTime);
+        return duration.count() >= ms_arg; // 1000 ms = 1 segundo
+    }
+	// To check if X milliseconds have passed (For Vampi L).
+	bool shouldUpdate_L(int ms_l) {
+        auto now = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdateTimeL);
+        return duration.count() >= ms_l; // 1000 ms = 1 segundo
+    }
+	// To check if X milliseconds have passed (For Vampi R).
+	bool shouldUpdate_R(int ms_r) {
+        auto now = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastUpdateTimeR);
+        return duration.count() >= ms_r; // 1000 ms = 1 segundo
+    }
+	// -2 +2 Standar volt signal to 30-480 bpm scale.
+	float bpmSignalLimiterAndNormalizer(float value) {
+        float result = 120 * (pow(2, value));  // bpm = 120 x 2^volt;
+		result = 60000/result;
+        return result;
+    }
+	// Random spreaded voltage generator.
+	float generateRandomVoltage(float spread) {
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_real_distribution<float> dis(spread - 1.0f, spread + 1.0f);  // Applying spreads.
+		return dis(gen);
+	}
+	// Spread input converter. ||  (-5V, +5V) -->
+	float spread_convert_in(float voltage) {
+		float voltage_out = voltage;
+		
+		if (voltage > 5) {voltage_out = 5;} 
+		else {
+			if (voltage < -5) {voltage_out = -5;} 
+			else {voltage_out = voltage;}
+		}
+
+        return voltage_out + 6;
+    }
+
+
+// --------------------   Main cycle logic  --------------------------------------
+
 	void process(const ProcessArgs& args) override {
 
-		// Reading inputs.
-		float audio_in = inputs[AUDIO_IN_INPUT].getVoltage();
-		float a_in = inputs[A_IN_INPUT].getVoltage();
-		float b_in = inputs[B_IN_INPUT].getVoltage();
+		// Get and format initial cycle params.
+		float beat_fraction = params[BEAT_FRAC_PARAM].getValue();  // Beat fraction param (0-8).
+		beat_fraction = normalizeBeatFraction(beat_fraction);  // Normalized beat fraction. (-16 +16).
 		
-		// Set leds
-		if (a_in == 10.0) {
-			lights[A_LED_LIGHT].setBrightness(1);
-		} else {
-			lights[A_LED_LIGHT].setBrightness(0);
-		}
-		if (b_in == 10.0) {
-			lights[B_LED_LIGHT].setBrightness(1);
-		} else {
-			lights[B_LED_LIGHT].setBrightness(0);
-		}
+		float spread_1 = params[L_SPREAD_PARAM].getValue();  // L Spread (1-9).
+		float spread_2 = params[R_SPREAD_PARAM].getValue();  // R Spread (1-9).
+		
+		float spread_cv1 = spread_convert_in(inputs[L_CV_INPUT].getVoltage());
+		float spread_cv2 = spread_convert_in(inputs[R_CV_INPUT].getVoltage());
 
-		// Set outputs.
-		if (a_in == 10.0 && b_in == 10.0) {
-			outputs[AND_OUT_OUTPUT].setVoltage(audio_in);  // AND
-			outputs[NAND_OUT_OUTPUT].setVoltage(0);
+		// Select knob or CV for spread.
+		if (inputs[L_CV_INPUT].isConnected()) {spread_1 = spread_cv1;}
+		else {spread_1 = spread_1;}
+		if (inputs[R_CV_INPUT].isConnected()) {spread_2 = spread_cv2;}
+		else {spread_2 = spread_2;}
+
+		ms = bpmSignalLimiterAndNormalizer(inputs[BPM_INPUT].getVoltage());  // BPM Input (-2 +2).
+		bool clockTrigger = inputs[CLOCK_INPUT].getVoltage() >= 1.0f;  // Reading clock state.
+		
+		int selector = params[SELECT_PARAM].getValue();  // Selector  value.
+
+		// Beat source selection.
+		if (selector == 0) {  // Clock logic.
+			if (clockTrigger != lastClockTrigger) {  // If a change in the clock signal is detected.
+				if (clockTrigger) {  // New clock tic.
+					// Random voltages between -1V y +1V.
+					std::uniform_real_distribution<float> distribution_1(minVoltage, maxVoltage);  
+					std::uniform_real_distribution<float> distribution_2(minVoltage, maxVoltage);
+					
+					// Get random voltages.
+					float randomVoltage1 = distribution_1(rng);  
+					float randomVoltage2 = distribution_2(rng);
+
+					// Calculate final L-R voltages.
+					l_volt = spread_1 + randomVoltage1;  
+					r_volt = spread_2 + randomVoltage2;
+
+					// Update last voltages.
+					lastVoltage1 = randomVoltage1;
+					lastVoltage2 = randomVoltage2;
+				} else {
+					// Assign last L-R voltages.
+					l_volt = spread_1 + lastVoltage1;
+					r_volt = spread_2 + lastVoltage2;
+				}
+			}
+			lastClockTrigger = clockTrigger;  // Update clock state.
+
 		} else {
-			outputs[NAND_OUT_OUTPUT].setVoltage(audio_in);  // NAND
-			outputs[AND_OUT_OUTPUT].setVoltage(0);
-		}
 
-		if (a_in == 10.0 || b_in == 10.0) {
-			outputs[OR_OUT_OUTPUT].setVoltage(audio_in);  // OR
-			outputs[NOT_OUT_OUTPUT].setVoltage(0);
-		} else {
-			outputs[NOT_OUT_OUTPUT].setVoltage(audio_in);  // NOR
-			outputs[OR_OUT_OUTPUT].setVoltage(0);
-		}
+		if (selector == 1) {  //  ??? Logic
+			if (shouldUpdate_L(ms_l)) {
+				l_volt = generateRandomVoltage(spread_1);
+				lastUpdateTimeL = std::chrono::steady_clock::now();
+			}
+			if (shouldUpdate_R(ms_r)) {
+				r_volt = generateRandomVoltage(spread_2);
+				lastUpdateTimeR = std::chrono::steady_clock::now();
+			}
+		} 
+		else {  // BPM Logic.
+			if (shouldUpdate(ms)) {
+				l_volt = generateRandomVoltage(spread_1);
+				r_volt = generateRandomVoltage(spread_2);
+				lastUpdateTime = std::chrono::steady_clock::now();
+			} 
+		}}
 
-		if (a_in == 10.0 ^ b_in == 10.0) {
-			outputs[XOR_OUT_OUTPUT].setVoltage(audio_in);  // XOR
-			outputs[XNOR_OUT_OUTPUT].setVoltage(0);
-		} else {
-			outputs[XNOR_OUT_OUTPUT].setVoltage(audio_in);  // XNOR
-			outputs[XOR_OUT_OUTPUT].setVoltage(0);
-		}
+		// OUTS
+		outputs[OUT1_OUTPUT].setVoltage(l_volt);  // Set L voltage.
+		outputs[OUT2_OUTPUT].setVoltage(r_volt);  // Set R voltage.
 
-	}
-};
+};  // End main cycle logic.
+};  // End general structure.
 
-// Distribution and structural widget.
-struct L_CarrierWidget : ModuleWidget {
-	L_CarrierWidget(L_Carrier* module) {
+
+// --------------------   Visual components  -------------------------------------
+struct L_RanticsWidget : ModuleWidget {
+	L_RanticsWidget(L_Rantics* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/L-Carrier.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/L-Rantics.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(21.228, 39.30)), module, L_Carrier::A_IN_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(39.968, 39.30)), module, L_Carrier::B_IN_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(30.457, 62.92)), module, L_Carrier::AUDIO_IN_INPUT));
+		addParam(createParamCentered<BefacoTinyKnob>(mm2px(Vec(30.504, 49.33)), module, L_Rantics::BEAT_FRAC_PARAM));
+		addParam(createParamCentered<BefacoTinyKnob>(mm2px(Vec(13.571, 73.8)), module, L_Rantics::L_SPREAD_PARAM));
+		addParam(createParamCentered<BefacoTinyKnob>(mm2px(Vec(48.496, 73.8)), module, L_Rantics::R_SPREAD_PARAM));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(10.736, 87.5)), module, L_Carrier::AND_OUT_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(30.458, 87.5)), module, L_Carrier::OR_OUT_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(50.112, 87.5)), module, L_Carrier::XOR_OUT_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(10.878, 105.0)), module, L_Carrier::NAND_OUT_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(30.533, 105.0)), module, L_Carrier::NOT_OUT_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(50.126, 105.0)), module, L_Carrier::XNOR_OUT_OUTPUT));
+        addParam(createParam<CKSSThreeHorizontal>(mm2px(Vec(25.40, 33.30)), module, L_Rantics::SELECT_PARAM));
 
-		addChild(createLightCentered<MediumLight<BlueLight>>(mm2px(Vec(24.41, 45.7)), module, L_Carrier::A_LED_LIGHT));
-		addChild(createLightCentered<MediumLight<BlueLight>>(mm2px(Vec(43.16, 45.7)), module, L_Carrier::B_LED_LIGHT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(12.471, 35.84)), module, L_Rantics::CLOCK_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(48.391, 35.84)), module, L_Rantics::BPM_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(13.466, 87.3)), module, L_Rantics::L_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(48.258, 87.3)), module, L_Rantics::R_CV_INPUT));
+
+		addOutput(createOutputCentered<PJ3410Port>(mm2px(Vec(13.273, 106.29)), module, L_Rantics::OUT1_OUTPUT));
+		addOutput(createOutputCentered<PJ3410Port>(mm2px(Vec(48.383, 106.29)), module, L_Rantics::OUT2_OUTPUT));
 	}
 };
 
 
-Model* modelL_Carrier = createModel<L_Carrier, L_CarrierWidget>("L-Carrier");
+Model* modelL_Rantics = createModel<L_Rantics, L_RanticsWidget>("L-Rantics");
