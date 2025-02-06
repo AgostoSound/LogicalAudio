@@ -41,6 +41,14 @@ struct L_Rantics : Module {
 	std::vector<std::__cxx11::basic_string<char>> lvl_labels = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
 	random::Xoroshiro128Plus rng;  // Pseudorandom number generator instance.
 
+	bool lastTicL = false; // Tic status in the previous cycle.
+	bool lastTicR = false; // Tic status in the previous cycle.
+    float lastVoltage1 = 0.0f; // Last generated voltage.
+    float lastVoltage2 = 0.0f; // Last generated voltage.
+    float minVoltage = -1.0f;
+    float maxVoltage = 1.0f;
+	float l_volt;
+	float r_volt;
 
 
 // --------------------   Config module  -----------------------------------------
@@ -71,18 +79,61 @@ struct L_Rantics : Module {
 // --------------------   Main cycle logic  --------------------------------------
 
 	void process(const ProcessArgs& args) override {
-		// Obtiene el valor del parámetro de polaridad y enciende LED correspondiente.
+		// Get polarity switch value and turn on the LEDs.
 		float polarity = params[POLARITY_PARAM].getValue();
 		lights[UNIPOLAR_LED_LIGHT].setBrightness(polarity == 0.f ? 1.f : 0.f);
 		lights[BIPOLAR_LED_LIGHT].setBrightness(polarity == 1.f ? 1.f : 0.f);
 
-		// Cuantización de L_SPREAD_PARAM y R_SPREAD_PARAM
+		// Get LvL knobs values.
 		float L_lvl = params[L_SPREAD_PARAM].getValue();
 		float R_lvl = params[R_SPREAD_PARAM].getValue();
 
-		// Salidas.
-		outputs[OUT1_OUTPUT].setVoltage(L_lvl);
-		outputs[OUT2_OUTPUT].setVoltage(R_lvl);
+		bool ticL = inputs[TIC1_INPUT].getVoltage() >= 1.0f;  // Reading tic L state.
+		bool ticR = inputs[TIC2_INPUT].getVoltage() >= 1.0f;  // Reading tic R state.
+
+		if (ticL != lastTicL) {  // If a change in the L tic signal is detected.
+			if (ticL) {  // New clock tic.
+				// Random voltage between -1V y +1V.
+				std::uniform_real_distribution<float> distribution_1(minVoltage, maxVoltage);  
+				
+				// Get random voltages.
+				float randomVoltage1 = distribution_1(rng);  
+
+				// Calculate final L-R voltages.
+				l_volt = L_lvl + randomVoltage1;  
+
+				// Update last voltages.
+				lastVoltage1 = randomVoltage1;
+			} else {
+				// Assign last L-R voltages.
+				l_volt = L_lvl + lastVoltage1;
+			}
+		}
+		lastTicL = ticL;  // Update tic state.
+
+		if (ticR != lastTicR) {  // If a change in the R tic signal is detected.
+			if (ticR) {  // New clock tic.
+				// Random voltage between -1V y +1V.
+				std::uniform_real_distribution<float> distribution_2(minVoltage, maxVoltage);
+				
+				// Get random voltage.
+				float randomVoltage2 = distribution_2(rng);
+
+				// Calculate final L-R voltages.
+				r_volt = R_lvl + randomVoltage2;
+
+				// Update last voltages.
+				lastVoltage2 = randomVoltage2;
+			} else {
+				// Assign last L-R voltages.
+				r_volt = R_lvl + lastVoltage2;
+			}
+		}
+		lastTicR = ticR;  // Update tic state.
+
+		// OUTPUTS.
+		outputs[OUT1_OUTPUT].setVoltage(l_volt);
+		outputs[OUT2_OUTPUT].setVoltage(r_volt);
 	}
 };
 
