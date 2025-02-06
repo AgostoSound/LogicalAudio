@@ -37,16 +37,13 @@ Vampi generates random ticks on each branch separately.
 If the selector is on Gates and none is connected, the output is 0V on both sides.
 
 Cambios pendientes:
-(Front)
-- Reemplazar knob de Beat Fraction por un swith de polaridad.
-- Cambiar el selector por uno vertical de 2 estados (Vampi o Gates).
-
 (Back)
-- El switch de polaridad debe hacer que los voltages se generen de forma unipolar o bipolar (ambos L y R)
-- Si ambas Gate inputs están conectadas, cada vez que una reciba señal activará el cambio de voltage del mismo lado (Gate L controla salida L).
-- Si solo una Gate input está conectada, controla los cambios de ambos lados.
-- Vampi genera ticks de forma aleatoria en cada rama por separado.
-- Si el selector está en Gates y no hay ninguna conectada, la salida debe ser 0V en ambos lados.
+- OK - El switch de polaridad debe hacer que los voltages se generen de forma unipolar o bipolar (ambos L y R)
+- OK - Si ambas Gate inputs están conectadas, cada vez que una reciba señal activará el cambio de voltage del mismo lado (Gate L controla salida L).
+- OK - Si solo una Gate input está conectada, controla los cambios de ambos lados.
+- OK - Si el selector está en Gates y no hay ninguna conectada, la salida debe ser 0V en ambos lados.
+- OK - Vampi genera ticks de forma aleatoria en cada rama por separado.
+- Si el input de CV está conectado, anula el LvL y usa el CV.
 
 
 • L-Filter: (Pendiente)

@@ -49,6 +49,10 @@ struct L_Rantics : Module {
     float maxVoltage = 1.0f;
 	float l_volt;
 	float r_volt;
+	bool ticL = false;
+	bool ticR = false;
+	int factor;
+	bool tics_disconected = false;
 
 
 // --------------------   Config module  -----------------------------------------
@@ -76,42 +80,94 @@ struct L_Rantics : Module {
 	}
 
 
+// --------------------   Functions  ---------------------------------------------
+
+	// Obtain multiply factor for polarity.
+	float getFactor(float polarity) {
+		std::uniform_real_distribution<float> random_distribution(minVoltage, maxVoltage);
+		float random_range = random_distribution(rng);
+		if (random_range >= 0) {factor = 1;}
+		else {factor = -1;}
+		if (polarity == 1.f) {factor = 1;}
+    	return factor;
+	}
+
+
 // --------------------   Main cycle logic  --------------------------------------
 
 	void process(const ProcessArgs& args) override {
 		// Get polarity switch value and turn on the LEDs.
 		float polarity = params[POLARITY_PARAM].getValue();
 		lights[UNIPOLAR_LED_LIGHT].setBrightness(polarity == 0.f ? 1.f : 0.f);
-		lights[BIPOLAR_LED_LIGHT].setBrightness(polarity == 1.f ? 1.f : 0.f);
+		lights[BIPOLAR_LED_LIGHT].setBrightness(polarity == 1.f ? 1.f : 0.f);		 
 
 		// Get LvL knobs values.
 		float L_lvl = params[L_SPREAD_PARAM].getValue();
 		float R_lvl = params[R_SPREAD_PARAM].getValue();
 
-		bool ticL = inputs[TIC1_INPUT].getVoltage() >= 1.0f;  // Reading tic L state.
-		bool ticR = inputs[TIC2_INPUT].getVoltage() >= 1.0f;  // Reading tic R state.
+		tics_disconected = false;
+		float ticSelector = params[TIC_SELECTOR_PARAM].getValue();
 
-		if (ticL != lastTicL) {  // If a change in the L tic signal is detected.
+		static float timer = 0.f; // Temporizador interno.
+		static float nextTicInterval = 0.f; // Intervalo de tiempo hasta el próximo tic.
+
+		if (ticSelector == 0.f) {
+			if (inputs[TIC1_INPUT].isConnected() && inputs[TIC2_INPUT].isConnected()) {
+				ticL = inputs[TIC1_INPUT].getVoltage() >= 1.0f;
+				ticR = inputs[TIC2_INPUT].getVoltage() >= 1.0f;
+			} else if (inputs[TIC1_INPUT].isConnected()) {
+				ticL = inputs[TIC1_INPUT].getVoltage() >= 1.0f;
+				ticR = ticL;
+			} else if (inputs[TIC2_INPUT].isConnected()) {
+				ticR = inputs[TIC2_INPUT].getVoltage() >= 1.0f;
+				ticL = ticR;
+			} else {
+				l_volt = 0.f;
+				r_volt = 0.f;
+				tics_disconected = true;
+			}
+		}
+		else {
+			// Modo tics aleatorios.
+			timer += args.sampleTime; // Incrementar el temporizador.
+
+			if (timer >= nextTicInterval) {
+				// Generar tics aleatorios.
+				ticL = random::uniform() > 0.5f; // 50% de probabilidad de tic.
+				ticR = random::uniform() > 0.5f; // 50% de probabilidad de tic.
+				timer = 0.f; // Reiniciar el temporizador.
+				nextTicInterval = random::uniform() * 0.8f + 0.2f; // Nuevo intervalo aleatorio entre 0.4 y 1.2 segundos.
+			} else {
+				// No hay tics en este ciclo.
+				ticL = false;
+				ticR = false;
+			}
+		}
+		
+
+		if (ticL != lastTicL && tics_disconected == false) {  // If a change in the L tic signal is detected.
 			if (ticL) {  // New clock tic.
 				// Random voltage between -1V y +1V.
-				std::uniform_real_distribution<float> distribution_1(minVoltage, maxVoltage);  
+				std::uniform_real_distribution<float> distribution_1(minVoltage, maxVoltage);
 				
 				// Get random voltages.
 				float randomVoltage1 = distribution_1(rng);  
 
-				// Calculate final L-R voltages.
-				l_volt = L_lvl + randomVoltage1;  
+				// Calculate final L voltage.
+				l_volt = L_lvl + randomVoltage1;
+				factor = getFactor(polarity); 
+				l_volt = l_volt * factor;  
 
-				// Update last voltages.
-				lastVoltage1 = randomVoltage1;
+				// Update last voltage.
+				lastVoltage1 = l_volt;
 			} else {
-				// Assign last L-R voltages.
-				l_volt = L_lvl + lastVoltage1;
+				// Assign last L voltage.
+				l_volt = lastVoltage1;
 			}
 		}
 		lastTicL = ticL;  // Update tic state.
 
-		if (ticR != lastTicR) {  // If a change in the R tic signal is detected.
+		if (ticR != lastTicR && tics_disconected == false) {  // If a change in the R tic signal is detected.
 			if (ticR) {  // New clock tic.
 				// Random voltage between -1V y +1V.
 				std::uniform_real_distribution<float> distribution_2(minVoltage, maxVoltage);
@@ -119,14 +175,16 @@ struct L_Rantics : Module {
 				// Get random voltage.
 				float randomVoltage2 = distribution_2(rng);
 
-				// Calculate final L-R voltages.
+				// Calculate final R voltage.
 				r_volt = R_lvl + randomVoltage2;
+				factor = getFactor(polarity); 
+				r_volt = r_volt * factor;
 
-				// Update last voltages.
-				lastVoltage2 = randomVoltage2;
+				// Update last voltage.
+				lastVoltage2 = r_volt;
 			} else {
-				// Assign last L-R voltages.
-				r_volt = R_lvl + lastVoltage2;
+				// Assign last R voltage.
+				r_volt = lastVoltage2;
 			}
 		}
 		lastTicR = ticR;  // Update tic state.
