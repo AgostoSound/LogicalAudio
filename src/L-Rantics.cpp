@@ -49,6 +49,8 @@ struct L_Rantics : Module {
     float maxVoltage = 1.0f;
 	float l_volt;
 	float r_volt;
+	float L_lvl;
+	float R_lvl;
 	bool ticL = false;
 	bool ticR = false;
 	int factor;
@@ -92,6 +94,20 @@ struct L_Rantics : Module {
     	return factor;
 	}
 
+	// Spread input converter. ||  (-5V, +5V) -->
+	float spread_convert_in(float voltage) {
+		float voltage_out = voltage;
+		
+		if (voltage > 5) {voltage_out = 5;} 
+		else {
+			if (voltage < -5) {voltage_out = -5;} 
+			else {voltage_out = voltage;}
+		}
+
+        return voltage_out + 6;
+    }
+
+
 
 // --------------------   Main cycle logic  --------------------------------------
 
@@ -101,9 +117,13 @@ struct L_Rantics : Module {
 		lights[UNIPOLAR_LED_LIGHT].setBrightness(polarity == 0.f ? 1.f : 0.f);
 		lights[BIPOLAR_LED_LIGHT].setBrightness(polarity == 1.f ? 1.f : 0.f);		 
 
-		// Get LvL knobs values.
-		float L_lvl = params[L_SPREAD_PARAM].getValue();
-		float R_lvl = params[R_SPREAD_PARAM].getValue();
+		// Get LvL knobs or cv values.
+		if (inputs[L_CV_INPUT].isConnected()) {
+			L_lvl = spread_convert_in(inputs[L_CV_INPUT].getVoltage());
+		} else {L_lvl = params[L_SPREAD_PARAM].getValue();}
+		if (inputs[L_CV_INPUT].isConnected()) {
+			R_lvl = spread_convert_in(inputs[R_CV_INPUT].getVoltage());
+		} else {R_lvl = params[R_SPREAD_PARAM].getValue();}
 
 		tics_disconected = false;
 		float ticSelector = params[TIC_SELECTOR_PARAM].getValue();

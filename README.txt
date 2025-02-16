@@ -43,7 +43,7 @@ Cambios pendientes:
 - OK - Si solo una Gate input está conectada, controla los cambios de ambos lados.
 - OK - Si el selector está en Gates y no hay ninguna conectada, la salida debe ser 0V en ambos lados.
 - OK - Vampi genera ticks de forma aleatoria en cada rama por separado.
-- Si el input de CV está conectado, anula el LvL y usa el CV.
+- OK - Si el input de CV está conectado, anula el LvL y usa el CV.
 
 
 • L-Filter: (Pendiente)
