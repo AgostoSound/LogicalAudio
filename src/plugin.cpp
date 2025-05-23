@@ -12,6 +12,7 @@ void init(Plugin* p) {
 	p->addModel(modelL_Rantics);
 	p->addModel(modelL_Random);
 	p->addModel(modelL_Panel);
+	p->addModel(modelL_Noises);
 
 
 	// Any other plugin initialization may go here.

@@ -48,6 +48,15 @@
         "random",
         "cv"
       ]
+    },
+    {
+      "slug": "L-Noises",
+      "name": "L-Noises",
+      "description": "Noise pulse generator",
+      "tags": [
+        "noise",
+        "generator"
+      ]
     }
   ]
 }

@@ -36,15 +36,40 @@ If only one Gate input is connected, it controls the changes on both sides.
 Vampi generates random ticks on each branch separately.
 If the selector is on Gates and none is connected, the output is 0V on both sides.
 
-Cambios pendientes:
-(Back)
-- OK - El switch de polaridad debe hacer que los voltages se generen de forma unipolar o bipolar (ambos L y R)
-- OK - Si ambas Gate inputs están conectadas, cada vez que una reciba señal activará el cambio de voltage del mismo lado (Gate L controla salida L).
-- OK - Si solo una Gate input está conectada, controla los cambios de ambos lados.
-- OK - Si el selector está en Gates y no hay ninguna conectada, la salida debe ser 0V en ambos lados.
-- OK - Vampi genera ticks de forma aleatoria en cada rama por separado.
-- OK - Si el input de CV está conectado, anula el LvL y usa el CV.
 
+----------------------------------------------
+• L-Noise:
+Generador que produce diferentes tipos de ruido (blanco, rosa, marrón) en función de operaciones lógicas entre dos entradas (A y B).
+
+Entradas:
+A y B: Entradas lógicas que controlan la modulación de los parámetros del ruido.
+CV In: Una entrada opcional de CV para modular manualmente los parámetros.
+
+Salidas:
+Noise Out: Salida de la señal de ruido procesada.
+
+Controles:
+Tipo de ruido: Un selector para elegir entre ruido blanco, rosa o marrón.
+Operación lógica: Un selector para elegir la operación lógica (AND, OR, XOR, etc.) que controla la modulación.
+Amplitud: Un potenciómetro para ajustar el nivel de salida del ruido.
+
+Filtrado: 
+Un control para ajustar la frecuencia de corte de un filtro paso bajo aplicado al ruido.
+Panorámica: Un control para ajustar la posición estéreo del ruido.
+
+TASKS
+(Front)
+- Entradas de signal A y B.
+- Selector de 3 pasos para los tipos de ruido.
+- Selector de 6 pasos para las puertas lógicas.
+- Potenciómetro de volumen de salida.
+- Salida mono.
+
+(Back)
+- Generar ruido blanco, rosa o marron segun selector.
+- 
+
+----------------------------------------------
 
 • L-Filter: (Pendiente)
 Un filtro cuya frecuencia de corte y resonancia se controlan mediante operaciones lógicas entre dos entradas (A y B). 
@@ -72,25 +97,3 @@ Si eliges la operación AND, la frecuencia de corte solo cambiará cuando ambas 
 Si eliges la operación OR, la frecuencia de corte cambiará cuando al menos una de las entradas esté activa.
 Si eliges la operación XOR, la frecuencia de corte cambiará solo cuando una de las entradas esté activa, pero no ambas.
 La resonancia y el tipo de filtro permiten ajustar el carácter del sonido, desde suave y cálido hasta agresivo y resonante.
-
-
-L-Noise: (Pendiente)
-Generador que produce diferentes tipos de ruido (blanco, rosa, marrón) y permite modular sus parámetros (amplitud, filtrado 
-y panorámica) en función de operaciones lógicas entre dos entradas (A y B).
-
-Entradas:
-A y B: Entradas lógicas que controlan la modulación de los parámetros del ruido.
-CV In: Una entrada opcional de CV para modular manualmente los parámetros.
-
-Salidas:
-Noise Out: Salida de la señal de ruido procesada.
-Env Out: Una salida de envolvente que sigue los cambios en la amplitud del ruido (útil para modular otros módulos).
-
-Controles:
-Tipo de ruido: Un selector para elegir entre ruido blanco, rosa o marrón.
-Operación lógica: Un selector para elegir la operación lógica (AND, OR, XOR, etc.) que controla la modulación.
-Amplitud: Un potenciómetro para ajustar el nivel de salida del ruido.
-
-Filtrado: 
-Un control para ajustar la frecuencia de corte de un filtro paso bajo aplicado al ruido.
-Panorámica: Un control para ajustar la posición estéreo del ruido.
