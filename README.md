@@ -27,5 +27,4 @@ Each module is designed as a creative tool for modular synthesists, composers, a
    ```
 
 2. Build it using the VCV Rack Plugin Development Toolchain:
-   See the official guide: VCV Rack Plugin Development
-
+   See the official guide: [VCV Rack Plugin Development](https://vcvrack.com/manual/PluginDevelopmentTutorial)
