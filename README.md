@@ -23,7 +23,7 @@ Each module is designed as a creative tool for modular synthesists, composers, a
 
 1. Clone this repository into your VCV Rack plugins folder:
    ```bash
-   git clone https://github.com/your-username/logicalaudio.git
+   git clone https://github.com/AgostoSound/LogicalAudio.git
    ```
 
 2. Build it using the VCV Rack Plugin Development Toolchain:
