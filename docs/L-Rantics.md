@@ -50,7 +50,7 @@
 
 - Generates random voltages in the range from approximately -1V to +1V, modulated by the level spread parameter (1 to 9).
 - When polarity is **bipolar**, output voltages range roughly from -1V to +1V.
-- When polarity is **unipolar**, output voltages are positive only (0 to +1V).
+- When polarity is **unipolar**, output voltages are positive only (0 to +2V).
 - The module responds to rising edges of gate clock signals on **Gate L** and **Gate R** inputs, producing a new random voltage for the corresponding channel.
 - If no clock inputs are connected or the tic selector parameter is set to random mode, the module generates random clock tics internally at random intervals (between 0.2 and 1.0 seconds approx).
 - Level spread knobs or CV inputs control the base level from which the random voltage is offset.
