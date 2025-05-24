@@ -1,5 +1,7 @@
 # L-Random
 
+![Captura de pantalla 2025-05-24 160541](https://github.com/user-attachments/assets/516707d6-52da-42ed-af0a-4d70a18abf7e)
+
 **L-Random** is a random voltage generator module with independent bipolar and unipolar outputs for left and right channels. It provides control over frequency and value spread, with options for global or individual parameters.
 
 ---
