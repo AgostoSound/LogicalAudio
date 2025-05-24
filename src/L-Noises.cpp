@@ -31,8 +31,7 @@ struct L_Noises : Module {
 	};
 
 // --------------------   Set initial values  ------------------------------------
-	std::vector<std::__cxx11::basic_string<char>> gates_labels = {"AND", "OR", "XOR", "NAND", "NOR", "XNOR"};
-	std::vector<std::__cxx11::basic_string<char>> noise_labels = {"Pink", "White", "Brown"};
+
 	float pink_b0 = 0.0f, pink_b1 = 0.0f, pink_b2 = 0.0f;
 	float brown = 0.0f;
 	float noise_l = 0.0f;
@@ -41,10 +40,15 @@ struct L_Noises : Module {
 // --------------------   Config module  -----------------------------------------
 	L_Noises() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
+
+		static const std::vector<std::string> noise_labels = {"Pink", "White", "Brown"};
 		configSwitch(NOISER_PARAM, 0.f, 2.f, 1.f, "Noise L mode", noise_labels);
 		configSwitch(NOISEL_PARAM, 0.f, 2.f, 1.f, "Noise R mode", noise_labels);
+		
+		static const std::vector<std::string> gates_labels = {"AND", "OR", "XOR", "NAND", "NOR", "XNOR"};
 		configSwitch(GATEL_PARAM, 0.f, 5.f, 1.f, "Gate L", gates_labels);
 		configSwitch(GATER_PARAM, 0.f, 5.f, 1.f, "Gate R", gates_labels);
+
 		configParam(VOLL_PARAM, 0.f, 100.f, 1.f, "Vol L");
 		configParam(VOLR_PARAM, 0.f, 100.f, 1.f, "Vol R");
 		configInput(LOGICA_INPUT, "Signal A");
@@ -56,14 +60,10 @@ struct L_Noises : Module {
 // --------------------   Functions  ---------------------------------------------
 	
 	// Generate white noise.
-	float generateNoises(float n_type) {
-
-		// White noise.
-		float white = random::normal();
+	float generateNoise(float n_type, float white) {
 
 		if (n_type == 1) {
-			float noiseWhite = white * 1.1f;
-			return noiseWhite;
+			return white * 1.1f;
 		}
 
 		// Pink noise (simple filter).
@@ -72,18 +72,14 @@ struct L_Noises : Module {
 			pink_b2 = pink_b1;
 			pink_b1 = pink_b0;
 			pink_b0 = white;
-
-			float noisePink = pink * 0.9f;
-			return noisePink;
+			return pink * 0.9f;
 		}
 
 		// Brown noise (white noise integration).
 		if (n_type == 2) {
 			brown += white * 0.02f;
 			brown = clamp(brown, -5.f, 5.f);
-		
-			float noiseBrown = brown;
-			return noiseBrown;
+			return brown;
 		}
 	}
 
@@ -97,31 +93,14 @@ struct L_Noises : Module {
 		float n_type_l = static_cast<int>(params[NOISEL_PARAM].getValue());
 		float n_type_r = static_cast<int>(params[NOISER_PARAM].getValue());
 
-		// Set leds
-		if (a_in == 10.0) {
-			lights[LOGICA_INPUT].setBrightness(1);
-			lights[LEDA_LIGHT].setBrightness(1);
-		} else {
-			lights[LOGICA_INPUT].setBrightness(0);
-			lights[LEDA_LIGHT].setBrightness(0);
-		}
-		if (b_in == 10.0) {
-			lights[LOGICB_INPUT].setBrightness(1);
-			lights[LEDB_LIGHT].setBrightness(1);
-		} else {
-			lights[LOGICB_INPUT].setBrightness(0);
-			lights[LEDB_LIGHT].setBrightness(0);
-		}
+		// Set leds.
+		lights[LEDA_LIGHT].setBrightness(a_in > 5.f ? 1.f : 0.f);
+		lights[LEDB_LIGHT].setBrightness(b_in > 5.f ? 1.f : 0.f);
 
-
-		if (inputs[OUTL_OUTPUT].isConnected()) {
-			noise_l = generateNoises(n_type_l);
-		} else {noise_l = 0.f;}
-
-		if (inputs[OUTR_OUTPUT].isConnected()) {
-			noise_r = generateNoises(n_type_r);
-		} else {noise_r = 0.f;}
-
+		// Generate noises.
+		float white = random::normal();  // White noise.
+		noise_l = generateNoise(n_type_l, white);
+		noise_r = generateNoise(n_type_r, white);
 
 		// Set outputs.
 		outputs[OUTL_OUTPUT].setVoltage(noise_l);
