@@ -1,8 +1,8 @@
 {
   "slug": "LogicalAudio",
   "name": "LogicalAudio",
-  "version": "2.0.0",
-  "license": "proprietary",
+  "version": "2.0.1",
+  "license": "GPL-3.0-or-later",
   "brand": "LogicalAudio",
   "author": "AgostoSound",
   "authorEmail": "agostosound@gmail.com",
@@ -16,7 +16,7 @@
     {
       "slug": "L-Carrier",
       "name": "L-Carrier",
-      "description": "Logic gates that allow an audio signal to pass through.",
+      "description": "Logic gate audio carrier.",
       "tags": [
         "audio",
         "logic"
@@ -25,7 +25,7 @@
     {
       "slug": "L-Random",
       "name": "L-Random",
-      "description": "Generate four individual or syncronized random states (constant and pulsed).",
+      "description": "Random voltage generator.",
       "tags": [
         "random",
         "pulse",
@@ -37,25 +37,28 @@
       "name": "L-Panel",
       "description": "Just a cool panel.",
       "tags": [
-        "panel"
+        "panel",
+        "logic"
       ]
     },
     {
       "slug": "L-Rantics",
       "name": "L-Rantics",
-      "description": "Two random voltages within a range of +1V/-1V around a central voltage.",
+      "description": "Dual-channel random voltage generator controlled by clock (tic) inputs.",
       "tags": [
         "random",
-        "cv"
+        "cv",
+        "logic"
       ]
     },
     {
       "slug": "L-Noises",
       "name": "L-Noises",
-      "description": "Noise pulse generator",
+      "description": "Dual logic-gated stereo noise generator.",
       "tags": [
         "noise",
-        "generator"
+        "generator",
+        "logic"
       ]
     }
   ]
