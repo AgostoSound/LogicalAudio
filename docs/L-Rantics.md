@@ -1,5 +1,7 @@
 # L-Rantics
 
+![Captura de pantalla 2025-05-24 160532](https://github.com/user-attachments/assets/08cae698-d361-425c-a4a9-6719976c0bbc)
+
 **L-Rantics** is a dual-channel random voltage generator controlled by clock (tic) inputs. It outputs random voltages triggered by gate signals or in autonomous random tic mode, with configurable polarity and level spread.
 
 ---
