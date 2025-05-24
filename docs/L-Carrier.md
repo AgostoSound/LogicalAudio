@@ -1,6 +1,8 @@
 # L-Carrier
 
-**L-Carrier** is a logic gate audio carrier module that processes two control voltage inputs (A and B) and an audio input. It outputs audio signals routed through various logic gate conditions: AND, OR, XOR, NAND, NOT (NOR), and XNOR, with visual feedback through LEDs indicating gate states.
+![Captura de pantalla 2025-05-24 160544](https://github.com/user-attachments/assets/0f728405-d7d0-40fd-b048-7e79d37d517b)
+
+**L-Carrier** is a logic gate audio carrier module that processes two control voltage inputs (A and B) and an audio input. It outputs audio signals routed through various logic gate conditions: AND, OR, XOR, NAND, NOR and XNOR, with visual feedback through LEDs indicating gate states.
 
 ---
 
@@ -24,12 +26,12 @@ This module has **no user-adjustable parameters**.
 
 | Output         | Description                                   |
 |----------------|-----------------------------------------------|
-| **AND OUT**    | Audio output gated by logical AND of A and B |
-| **OR OUT**     | Audio output gated by logical OR of A and B  |
-| **XOR OUT**    | Audio output gated by logical XOR of A and B |
-| **NAND OUT**   | Audio output gated by logical NAND of A and B|
-| **NOT OUT**    | Audio output gated by logical NOR (NOT OR) of A and B |
-| **XNOR OUT**   | Audio output gated by logical XNOR of A and B|
+| **AND**    | Audio output gated by logical AND of A and B |
+| **OR**     | Audio output gated by logical OR of A and B  |
+| **XOR**    | Audio output gated by logical XOR of A and B |
+| **NAND**   | Audio output gated by logical NAND of A and B|
+| **NOT**    | Audio output gated by logical NOR (NOT OR) of A and B |
+| **XNOR**   | Audio output gated by logical XNOR of A and B|
 
 ---
 
@@ -53,7 +55,7 @@ This module has **no user-adjustable parameters**.
   - **AND**: Audio passes only if both A and B are HIGH.
   - **NAND**: Audio passes if NOT(AND) condition is met.
   - **OR**: Audio passes if either A or B is HIGH.
-  - **NOT (NOR)**: Audio passes if neither A nor B is HIGH.
+  - **NOR**: Audio passes if neither A nor B is HIGH.
   - **XOR**: Audio passes if exactly one of A or B is HIGH.
   - **XNOR**: Audio passes if both A and B are equal (both HIGH or both LOW).
 - Corresponding LEDs illuminate to indicate active logic states for inputs and XOR condition.
