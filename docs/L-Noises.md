@@ -1,5 +1,7 @@
 # L-Noises
 
+![Captura de pantalla 2025-05-24 160502](https://github.com/user-attachments/assets/afa52dbb-d006-4249-b054-8edb016ad128)
+
 **L-Noises** is a dual-channel stereo noise generator with logic gates controlling the output of each channel. It’s useful for creating rhythmic textures, pseudo-random bursts, and logic-driven noise ambiences.
 
 ---
