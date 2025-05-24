@@ -11,7 +11,12 @@ Each module is designed as a creative tool for modular synthesists, composers, a
 
 ## 📦 Included Modules
 
-- [L-Noises](docs/L-Noises.md) – Dual logic-gated stereo noise generator
+- [L-Carrier](docs/L-Carrier.md) – Logic gate audio carrier.
+- [L-Random](docs/L-Random.md) – Random voltage generator.
+- [L-Panel](docs/L-Panel.md) – Just a cool panel.
+- [L-Rantics](docs/L-Rantics.md) – Dual-channel random voltage generator controlled by clock (tic) inputs.
+- [L-Noises](docs/L-Noises.md) – Dual logic-gated stereo noise generator.
+
 
 
 ## 📥 Installation
