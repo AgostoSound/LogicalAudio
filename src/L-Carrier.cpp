@@ -1,5 +1,30 @@
 #include "plugin.hpp"
 
+// Smoother to avoid clicks in gates.
+struct SmoothGate {
+	float gain = 0.0f;
+	bool isOpen = false;
+	int counter = 0;
+	static const int attackSamples = 12;
+
+	float process(bool gateOpen, float input) {
+		if (gateOpen != isOpen) {
+			isOpen = gateOpen;
+			counter = 0;
+		}
+
+		if (counter < attackSamples) {
+			counter++;
+			float t = (float)counter / attackSamples;
+			gain = isOpen ? t : 1.0f - t;
+		} else {
+			gain = isOpen ? 1.0f : 0.0f;
+		}
+
+		return gain * input;
+	}
+};
+
 
 struct L_Carrier : Module {
 
@@ -31,18 +56,20 @@ struct L_Carrier : Module {
 		LIGHTS_LEN
 	};
 
+	SmoothGate andGate, nandGate, orGate, notGate, xorGate, xnorGate;
+
 	// Initial configuration.
 	L_Carrier() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configInput(A_IN_INPUT, "");
-		configInput(B_IN_INPUT, "");
-		configInput(AUDIO_IN_INPUT, "");
-		configOutput(AND_OUT_OUTPUT, "");
-		configOutput(OR_OUT_OUTPUT, "");
-		configOutput(XOR_OUT_OUTPUT, "");
-		configOutput(NAND_OUT_OUTPUT, "");
-		configOutput(NOT_OUT_OUTPUT, "");
-		configOutput(XNOR_OUT_OUTPUT, "");
+		configInput(A_IN_INPUT, "A in");
+		configInput(B_IN_INPUT, "B in");
+		configInput(AUDIO_IN_INPUT, "Audio in");
+		configOutput(AND_OUT_OUTPUT, "And out");
+		configOutput(OR_OUT_OUTPUT, "Or out");
+		configOutput(XOR_OUT_OUTPUT, "Xor out");
+		configOutput(NAND_OUT_OUTPUT, "Nand out");
+		configOutput(NOT_OUT_OUTPUT, "Nor out");
+		configOutput(XNOR_OUT_OUTPUT, "Xnor out");
 	}
 
 	// Main logic.
@@ -52,49 +79,33 @@ struct L_Carrier : Module {
 		float audio_in = inputs[AUDIO_IN_INPUT].getVoltage();
 		float a_in = inputs[A_IN_INPUT].getVoltage();
 		float b_in = inputs[B_IN_INPUT].getVoltage();
+
+		bool aHigh = (a_in == 10.0f);
+		bool bHigh = (b_in == 10.0f);
 		
-		// Set leds
-		if (a_in == 10.0) {
-			lights[A_LED_LIGHT].setBrightness(1);
-			lights[CIRCUIT_A_LED_LIGHT].setBrightness(1);
-		} else {
-			lights[A_LED_LIGHT].setBrightness(0);
-			lights[CIRCUIT_A_LED_LIGHT].setBrightness(0);
-		}
-		if (b_in == 10.0) {
-			lights[B_LED_LIGHT].setBrightness(1);
-			lights[CIRCUIT_B_LED_LIGHT].setBrightness(1);
-		} else {
-			lights[B_LED_LIGHT].setBrightness(0);
-			lights[CIRCUIT_B_LED_LIGHT].setBrightness(0);
-		}
+		// LEDs
+		lights[A_LED_LIGHT].setBrightness(aHigh ? 1.f : 0.f);
+		lights[CIRCUIT_A_LED_LIGHT].setBrightness(aHigh ? 1.f : 0.f);
+		lights[B_LED_LIGHT].setBrightness(bHigh ? 1.f : 0.f);
+		lights[CIRCUIT_B_LED_LIGHT].setBrightness(bHigh ? 1.f : 0.f);
 
-		// Set outputs.
-		if (a_in == 10.0 && b_in == 10.0) {
-			outputs[AND_OUT_OUTPUT].setVoltage(audio_in);  // AND
-			outputs[NAND_OUT_OUTPUT].setVoltage(0);
-		} else {
-			outputs[NAND_OUT_OUTPUT].setVoltage(audio_in);  // NAND
-			outputs[AND_OUT_OUTPUT].setVoltage(0);
-		}
+		// Smooth outputs.
+		bool andResult = aHigh && bHigh;
+		bool nandResult = !andResult;
+		bool orResult = aHigh || bHigh;
+		bool norResult = !orResult;
+		bool xorResult = aHigh ^ bHigh;
+		bool xnorResult = !xorResult;
 
-		if (a_in == 10.0 || b_in == 10.0) {
-			outputs[OR_OUT_OUTPUT].setVoltage(audio_in);  // OR
-			outputs[NOT_OUT_OUTPUT].setVoltage(0);
-		} else {
-			outputs[NOT_OUT_OUTPUT].setVoltage(audio_in);  // NOR
-			outputs[OR_OUT_OUTPUT].setVoltage(0);
-		}
+		outputs[AND_OUT_OUTPUT].setVoltage(andGate.process(andResult, audio_in));
+		outputs[NAND_OUT_OUTPUT].setVoltage(nandGate.process(nandResult, audio_in));
+		outputs[OR_OUT_OUTPUT].setVoltage(orGate.process(orResult, audio_in));
+		outputs[NOT_OUT_OUTPUT].setVoltage(notGate.process(norResult, audio_in));
+		outputs[XOR_OUT_OUTPUT].setVoltage(xorGate.process(xorResult, audio_in));
+		outputs[XNOR_OUT_OUTPUT].setVoltage(xnorGate.process(xnorResult, audio_in));
 
-		if (a_in == 10.0 ^ b_in == 10.0) {
-			outputs[XOR_OUT_OUTPUT].setVoltage(audio_in);  // XOR
-			outputs[XNOR_OUT_OUTPUT].setVoltage(0);
-			lights[CIRCUIT_XOR_LED_LIGHT].setBrightness(1);
-		} else {
-			outputs[XNOR_OUT_OUTPUT].setVoltage(audio_in);  // XNOR
-			outputs[XOR_OUT_OUTPUT].setVoltage(0);
-			lights[CIRCUIT_XOR_LED_LIGHT].setBrightness(0);
-		}
+		// LED XOR
+		lights[CIRCUIT_XOR_LED_LIGHT].setBrightness(xorResult ? 1.f : 0.f);
 
 	}
 };
