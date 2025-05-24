@@ -30,7 +30,7 @@ This module has **no user-adjustable parameters**.
 | **OR**     | Audio output gated by logical OR of A and B  |
 | **XOR**    | Audio output gated by logical XOR of A and B |
 | **NAND**   | Audio output gated by logical NAND of A and B|
-| **NOT**    | Audio output gated by logical NOR (NOT OR) of A and B |
+| **NOR**    | Audio output gated by logical NOR of A and B |
 | **XNOR**   | Audio output gated by logical XNOR of A and B|
 
 ---
@@ -53,7 +53,7 @@ This module has **no user-adjustable parameters**.
 - Logic HIGH is defined as exactly 10V on the A or B inputs; any other voltage is considered LOW.
 - Outputs route the audio input through gates corresponding to basic logical operations:
   - **AND**: Audio passes only if both A and B are HIGH.
-  - **NAND**: Audio passes if NOT(AND) condition is met.
+  - **NAND**: Audio passes if NAND condition is met.
   - **OR**: Audio passes if either A or B is HIGH.
   - **NOR**: Audio passes if neither A nor B is HIGH.
   - **XOR**: Audio passes if exactly one of A or B is HIGH.
