@@ -76,4 +76,4 @@ Each channel only emits noise when its configured logic gate evaluates `true` fo
 
 ---
 
-[⬅ Back to Module Index](./README.md)
+[⬅ Back to Module Index](../README.md)
