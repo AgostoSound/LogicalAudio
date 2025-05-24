@@ -36,6 +36,8 @@ struct L_Noises : Module {
 	float brown = 0.0f;
 	float noise_l = 0.0f;
 	float noise_r = 0.0f;
+	float smoothed_l = 0.f;
+	float smoothed_r = 0.f;
 
 // --------------------   Config module  -----------------------------------------
 	L_Noises() {
@@ -83,6 +85,20 @@ struct L_Noises : Module {
 		}
 	}
 
+	// Logic gates.
+	bool logicGatePass(int gate_type, bool a, bool b) {
+		switch (gate_type) {
+			case 0: return a && b;        // AND
+			case 1: return a || b;        // OR
+			case 2: return a != b;        // XOR
+			case 3: return !(a && b);     // NAND
+			case 4: return !(a || b);     // NOR
+			case 5: return a == b;        // XNOR
+			default: return false;
+		}
+	}
+
+
 // --------------------   Main cycle logic  --------------------------------------
 
 	void process(const ProcessArgs& args) override {
@@ -92,6 +108,12 @@ struct L_Noises : Module {
 		float b_in = inputs[LOGICB_INPUT].getVoltage();
 		float n_type_l = static_cast<int>(params[NOISEL_PARAM].getValue());
 		float n_type_r = static_cast<int>(params[NOISER_PARAM].getValue());
+		float gate_l = static_cast<int>(params[GATEL_PARAM].getValue());
+		float gate_r = static_cast<int>(params[GATER_PARAM].getValue());
+		float vol_l = params[VOLL_PARAM].getValue() / 100.f;
+		float vol_r = params[VOLR_PARAM].getValue() / 100.f;
+		bool a = a_in > 5.f;
+		bool b = b_in > 5.f;
 
 		// Set leds.
 		lights[LEDA_LIGHT].setBrightness(a_in > 5.f ? 1.f : 0.f);
@@ -102,9 +124,32 @@ struct L_Noises : Module {
 		noise_l = generateNoise(n_type_l, white);
 		noise_r = generateNoise(n_type_r, white);
 
-		// Set outputs.
-		outputs[OUTL_OUTPUT].setVoltage(noise_l);
-		outputs[OUTR_OUTPUT].setVoltage(noise_r);
+		const float attackSamples = 12.f;  // Attack.
+		float coeff = 1.f / attackSamples;
+		coeff = clamp(coeff, 0.f, 1.f);
+
+		// Logic gates.
+		bool pass_l = logicGatePass(gate_l, a, b);
+		bool pass_r = logicGatePass(gate_r, a, b);
+
+		// Apply volume.
+		float target_l = pass_l ? noise_l * vol_l : 0.f;
+		float target_r = pass_r ? noise_r * vol_r : 0.f;
+
+		// Only apply attack if noise type is brown (2).
+		if (n_type_l == 2) {
+			smoothed_l += (target_l - smoothed_l) * coeff;
+			outputs[OUTL_OUTPUT].setVoltage(smoothed_l);
+		} else {
+			outputs[OUTL_OUTPUT].setVoltage(target_l);
+		}
+
+		if (n_type_r == 2) {
+			smoothed_r += (target_r - smoothed_r) * coeff;
+			outputs[OUTR_OUTPUT].setVoltage(smoothed_r);
+		} else {
+			outputs[OUTR_OUTPUT].setVoltage(target_r);
+		}
 
 	}
 };
