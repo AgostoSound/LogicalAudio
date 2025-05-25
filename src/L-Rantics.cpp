@@ -86,8 +86,7 @@ struct L_Rantics : Module {
 
 	// Obtain multiply factor for polarity.
 	float getFactor(float polarity) {
-		std::uniform_real_distribution<float> random_distribution(minVoltage, maxVoltage);
-		float random_range = random_distribution(rng);
+		float random_range = rack::random::uniform() * (maxVoltage - minVoltage) + minVoltage;
 		if (random_range >= 0) {factor = 1;}
 		else {factor = -1;}
 		if (polarity == 1.f) {factor = 1;}
@@ -168,10 +167,7 @@ struct L_Rantics : Module {
 		if (ticL != lastTicL && tics_disconected == false) {  // If a change in the L tic signal is detected.
 			if (ticL) {  // New clock tic.
 				// Random voltage between -1V y +1V.
-				std::uniform_real_distribution<float> distribution_1(minVoltage, maxVoltage);
-				
-				// Get random voltages.
-				float randomVoltage1 = distribution_1(rng);  
+				float randomVoltage1 = rack::random::uniform() * (maxVoltage - minVoltage) + minVoltage;
 
 				// Calculate final L voltage.
 				l_volt = L_lvl + randomVoltage1;
@@ -190,11 +186,8 @@ struct L_Rantics : Module {
 		if (ticR != lastTicR && tics_disconected == false) {  // If a change in the R tic signal is detected.
 			if (ticR) {  // New clock tic.
 				// Random voltage between -1V y +1V.
-				std::uniform_real_distribution<float> distribution_2(minVoltage, maxVoltage);
+				float randomVoltage2 = rack::random::uniform() * (maxVoltage - minVoltage) + minVoltage;
 				
-				// Get random voltage.
-				float randomVoltage2 = distribution_2(rng);
-
 				// Calculate final R voltage.
 				r_volt = R_lvl + randomVoltage2;
 				factor = getFactor(polarity); 

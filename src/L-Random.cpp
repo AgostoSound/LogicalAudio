@@ -149,19 +149,18 @@ struct L_Random : Module {
     }
 
 	void generateRandomVoltage(float spread, float& outputVoltage, bool isBipolar) {
-		std::uniform_real_distribution<float> voltage_top((spread-1.0f), (spread+1.0f));  // Top range.
-		std::uniform_real_distribution<float> voltage_bottom(-(spread+1.0f), -(spread-1.0f));  // Bottom Range.
-		std::uniform_real_distribution<float> choice(0.0f, 2.0f);  // Range choicing.
-		float selected = choice(rng);  // Random from 0 to 2.
+		float selected = rack::random::uniform() * 2.0f;  // Random from 0.0f to 2.0f
 
 		float r;  // Choice range.
-		if (selected >= 1) {
-			r = voltage_top(rng);
+		if (selected >= 1.0f) {
+			// voltage_top: (spread - 1.0f) to (spread + 1.0f)
+			r = rack::random::uniform() * 2.0f + (spread - 1.0f);
 		} else {
-			r = voltage_bottom(rng);
+			// voltage_bottom: -(spread + 1.0f) to -(spread - 1.0f)
+			r = -(rack::random::uniform() * 2.0f + (spread - 1.0f));
 		}
 
-		outputVoltage = isBipolar ? r : std::abs(r) * 2;
+		outputVoltage = isBipolar ? r : std::abs(r) * 2.0f;
 	}
 
 
@@ -247,19 +246,19 @@ struct L_Random : Module {
         
 		// Use general parameters and generate a unique random values.
 		if (switch_g == 1) {
-			std::uniform_real_distribution<float> voltage_top((spread_1-1.0f), (spread_1+1.0f));  // Top range.
-			std::uniform_real_distribution<float> voltage_bottom(-(spread_1+1.0f), -(spread_1-1.0f));  // Bottom Range.
-			std::uniform_real_distribution<float> choice(0.0f, 2.0f);  // Range choicing.
-			float selected = choice(rng);  // Random from 0 to 2.
+			float selected = rack::random::uniform() * 2.0f;  // Random from 0.0f to 2.0f
 			float r;  // Choice range.
-			if (selected >= 1) {
-				r = voltage_top(rng);
+
+			if (selected >= 1.0f) {
+				// voltage_top: (spread_1 - 1.0f) to (spread_1 + 1.0f)
+				r = rack::random::uniform() * 2.0f + (spread_1 - 1.0f);
 			} else {
-				r = voltage_bottom(rng);
+				// voltage_bottom: -(spread_1 + 1.0f) to -(spread_1 - 1.0f)
+				r = -(rack::random::uniform() * 2.0f + (spread_1 - 1.0f));
 			}
 
 			r_bipolar = r;
-			r_unipolar = std::abs(r) * 2;
+			r_unipolar = std::abs(r) * 2.0f;
 
 			// L Constant.
 			if (shouldUpdate1(ms1)) {  
@@ -289,54 +288,47 @@ struct L_Random : Module {
 		else {
 			// L Constant.
 			if (shouldUpdate1(ms1)) {  
-				std::uniform_real_distribution<float> voltage_top((spread_1-1.0f), (spread_1+1.0f));  // Top range.
-				std::uniform_real_distribution<float> voltage_bottom(-(spread_1+1.0f), -(spread_1-1.0f));  // Bottom Range.
-				std::uniform_real_distribution<float> choice(0.0f, 2.0f);  // Range choicing.
-				float selected = choice(rng);  // Random from 0 to 2.
+				float selected = rack::random::uniform() * 2.0f;  // Random from 0.0f to 2.0f
 
 				float r1;  // Choice range.
-				if (selected >= 1) {
-					r1 = voltage_top(rng);
+				if (selected >= 1.0f) {
+					// voltage_top: (spread_1 - 1.0f) to (spread_1 + 1.0f)
+					r1 = rack::random::uniform() * 2.0f + (spread_1 - 1.0f);
 				} else {
-					r1 = voltage_bottom(rng);
+					// voltage_bottom: -(spread_1 + 1.0f) to -(spread_1 - 1.0f)
+					r1 = -(rack::random::uniform() * 2.0f + (spread_1 - 1.0f));
 				}
+
 				outputs[L_CONST_OUTPUT].setVoltage(r1);  // Set voltage.
 				lastUpdateTime1 = std::chrono::steady_clock::now();
 			}
+
 			
 			// Rectified L constant.
 			if (shouldUpdate2(ms2)) {  
-				std::uniform_real_distribution<float> voltage_generated((spread_2-1.0f), (spread_2+1.0f));
-				
-				float r2;
-				r2 = voltage_generated(rng);
+				float r2 = rack::random::uniform() * 2.0f + (spread_2 - 1.0f);
 				outputs[L_CONST_RECT_OUTPUT].setVoltage(r2);  // Set voltage.
 				lastUpdateTime2 = std::chrono::steady_clock::now();
 			}
 
 			// R Constant.
 			if (shouldUpdate3(ms3)) {  
-				std::uniform_real_distribution<float> voltage_top((spread_3-1.0f), (spread_3+1.0f));  // Top range.
-				std::uniform_real_distribution<float> voltage_bottom(-(spread_3+1.0f), -(spread_3-1.0f));  // Bottom Range.
-				std::uniform_real_distribution<float> choice(0.0f, 2.0f);  // Range choicing.
-				float selected = choice(rng);  // Random from 0 to 2.
+				float selected = rack::random::uniform() * 2.0f;  // Random from 0 to 2.
 
-				float r3;  // Choice range.
-				if (selected >= 1) {
-					r3 = voltage_top(rng);
+				float r3;
+				if (selected >= 1.0f) {
+					r3 = rack::random::uniform() * 2.0f + (spread_3 - 1.0f);  // Top range.
 				} else {
-					r3 = voltage_bottom(rng);
+					r3 = -rack::random::uniform() * 2.0f - (spread_3 - 1.0f);  // Bottom range.
 				}
-				outputs[R_CONST_OUTPUT].setVoltage(r3);  // Set voltage.
+				outputs[R_CONST_OUTPUT].setVoltage(r3);
 				lastUpdateTime3 = std::chrono::steady_clock::now();
 			}
 			
 			// Rectified R constant.
 			if (shouldUpdate4(ms4)) {  
-				std::uniform_real_distribution<float> voltage_generated((spread_4-1.0f), (spread_4+1.0f));
-				
-				float r4;
-				r4 = voltage_generated(rng);
+				float r4 = rack::random::uniform() * 2.0f + (spread_4 - 1.0f);
+
 				outputs[R_CONST_RECT_OUTPUT].setVoltage(r4);  // Set voltage.
 				lastUpdateTime4 = std::chrono::steady_clock::now();
 			}
