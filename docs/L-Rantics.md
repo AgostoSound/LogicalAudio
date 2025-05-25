@@ -10,10 +10,10 @@
 
 | Type     | Name           | Description |
 |----------|----------------|-------------|
-| Switch   | **LvL L**      | Left channel level spread, 9 steps labeled 1 to 9 |
-| Switch   | **LvL R**      | Right channel level spread, 9 steps labeled 1 to 9 |
-| Knob     | **Polarity**   | Output polarity mode: `0` = Bipolar (± voltage), `1` = Unipolar (positive only) |
-| Knob     | **Tic Selector** | Clock mode: `0` = external clock inputs, `1` = internal random clock mode |
+| Knob   | **LvL L**      | Left channel level spread, 9 steps labeled 1 to 9 |
+| Knob   | **LvL R**      | Right channel level spread, 9 steps labeled 1 to 9 |
+| Switch     | **Polarity**   | Output polarity mode: `0` = Bipolar (± voltage), `1` = Unipolar (positive only) |
+| Switch     | **Tic Selector** | Clock mode: `0` = external clock inputs, `1` = internal random clock mode |
 
 ---
 
