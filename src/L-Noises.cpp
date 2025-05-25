@@ -83,6 +83,8 @@ struct L_Noises : Module {
 			brown = clamp(brown, -5.f, 5.f);
 			return brown;
 		}
+
+		return white;
 	}
 
 	// Logic gates.
