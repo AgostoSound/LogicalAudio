@@ -61,15 +61,15 @@ struct L_Carrier : Module {
 	// Initial configuration.
 	L_Carrier() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configInput(A_IN_INPUT, "A in");
-		configInput(B_IN_INPUT, "B in");
-		configInput(AUDIO_IN_INPUT, "Audio in");
-		configOutput(AND_OUT_OUTPUT, "And out");
-		configOutput(OR_OUT_OUTPUT, "Or out");
-		configOutput(XOR_OUT_OUTPUT, "Xor out");
-		configOutput(NAND_OUT_OUTPUT, "Nand out");
-		configOutput(NOT_OUT_OUTPUT, "Nor out");
-		configOutput(XNOR_OUT_OUTPUT, "Xnor out");
+		configInput(A_IN_INPUT, "A");
+		configInput(B_IN_INPUT, "B");
+		configInput(AUDIO_IN_INPUT, "Audio");
+		configOutput(AND_OUT_OUTPUT, "And");
+		configOutput(OR_OUT_OUTPUT, "Or");
+		configOutput(XOR_OUT_OUTPUT, "Xor");
+		configOutput(NAND_OUT_OUTPUT, "Nand");
+		configOutput(NOT_OUT_OUTPUT, "Nor");
+		configOutput(XNOR_OUT_OUTPUT, "Xnor");
 	}
 
 	// Main logic.
