@@ -38,7 +38,7 @@ struct L_Rantics : Module {
 	};
 
 // --------------------   Set initial values  ------------------------------------
-	std::vector<std::__cxx11::basic_string<char>> lvl_labels = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
+	std::vector<std::string> lvl_labels = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
 	random::Xoroshiro128Plus rng;  // Pseudorandom number generator instance.
 
 	bool lastTicL = false; // Tic status in the previous cycle.
